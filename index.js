@@ -32,9 +32,9 @@ App.get("/", (req, res) => {
 mongoose
   .connect(process.env.CONNECTION_STRING)
   .then(() => {
-    App.listen(process.env.PORT, () => {
+    App.listen(5000, () => {
       console.log(
-        `Database Connected and server is listening https://localhost:${process.env.PORT}`
+        `Database Connected and server is listening https://localhost:5000`
       );
     });
   })
