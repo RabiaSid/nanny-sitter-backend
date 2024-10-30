@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoute = require("./route/authroute");
-const packageRoute = require("./route/packageroute");
 const bookingRoute = require("./route/bookingroute");
 const passport = require("passport");
 const cookieSession = require("cookie-session");
@@ -25,7 +24,6 @@ App.use(cors());
 
 // Routes
 App.use("/auth", authRoute);
-App.use("/package", packageRoute);
 App.use("/booking", bookingRoute);
 App.get("/", (req, res) => {
   res.send("Server Started");
