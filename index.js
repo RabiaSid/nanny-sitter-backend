@@ -7,7 +7,6 @@ const packageRoute = require("./route/packageroute");
 const bookingRoute = require("./route/bookingroute");
 const passport = require("passport");
 const cookieSession = require("cookie-session");
-const passportStrategy = require("./config/passport");
 
 const App = express();
 
