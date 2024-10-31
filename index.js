@@ -19,7 +19,7 @@ App.use(cors(corsOptions));
 App.use("/auth", authroute);
 App.use("/booking", bookingroute);
 App.get("/", (req, res) => {
-  res.send("Server Started");
+  res.send({ message: "Server Started" });
 });
 
 mongoose
