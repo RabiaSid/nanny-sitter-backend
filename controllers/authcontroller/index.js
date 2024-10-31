@@ -41,13 +41,47 @@ const AuthController = {
   },
   userSignup: async (req, res) => {
     let {
-      firstName, lastName, email, role, password, region, serviceType, zipCode, isActive, totalKids, sharingNanny, parentJobDescription,
+      firstName,
+      lastName,
+      email,
+      role,
+      password,
+      region,
+      serviceType,
+      zipCode,
+      isActive,
+      totalKids,
+      sharingNanny,
+      parentJobDescription,
     } = req.body;
     let obj = {
-      firstName, lastName, email, role, password, region, serviceType, zipCode, isActive, totalKids, sharingNanny, parentJobDescription,
+      firstName,
+      lastName,
+      email,
+      role,
+      password,
+      region,
+      serviceType,
+      zipCode,
+      isActive,
+      totalKids,
+      sharingNanny,
+      parentJobDescription,
     };
     let arr = [
-      "firstName", "lastName", "email", "role", "password", "region", "serviceType", "zipCode", "isActive", "totalKids", "sharingNanny", "parentJobDescription",];
+      "firstName",
+      "lastName",
+      "email",
+      "role",
+      "password",
+      "region",
+      "serviceType",
+      "zipCode",
+      "isActive",
+      "totalKids",
+      "sharingNanny",
+      "parentJobDescription",
+    ];
     let errArr = [];
 
     arr.forEach((x) => {
@@ -84,19 +118,83 @@ const AuthController = {
   },
   nannySignup: async (req, res) => {
     let {
-      firstName, lastName, email, role, password, region, serviceType, zipCode, isActive, budget, isAIDcertificate, isCPRcertificate, isDrivingLicense, doHouseKeeping, doMealPrep, houseKeeping, careSpecialChild, isLiven, Language, childAgeGroup, experience, aboutYourself
+      firstName,
+      lastName,
+      email,
+      role,
+      password,
+      region,
+      serviceType,
+      zipCode,
+      isActive,
+      budget,
+      isAIDcertificate,
+      isCPRcertificate,
+      isDrivingLicense,
+      doHouseKeeping,
+      doMealPrep,
+      houseKeeping,
+      careSpecialChild,
+      isLiven,
+      Language,
+      childAgeGroup,
+      experience,
+      aboutYourself,
     } = req.body;
     let obj = {
-      firstName, lastName, email, role, password, region, serviceType, zipCode, isActive, budget, isAIDcertificate, isCPRcertificate, isDrivingLicense, doHouseKeeping, doMealPrep, houseKeeping, careSpecialChild, isLiven, Language, childAgeGroup, experience,  aboutYourself
+      firstName,
+      lastName,
+      email,
+      role,
+      password,
+      region,
+      serviceType,
+      zipCode,
+      isActive,
+      budget,
+      isAIDcertificate,
+      isCPRcertificate,
+      isDrivingLicense,
+      doHouseKeeping,
+      doMealPrep,
+      houseKeeping,
+      careSpecialChild,
+      isLiven,
+      Language,
+      childAgeGroup,
+      experience,
+      aboutYourself,
     };
-    let arr = ["firstName", "lastName", "email", "role", "password", "region", "serviceType", "zipCode", "isActive", "budget", "isAIDcertificate", "isCPRcertificate", "isDrivingLicense", "doHouseKeeping", "doMealPrep", "houseKeeping", "careSpecialChild", "isLiven", "Language", "childAgeGroup", "experience", " aboutYourself"];
+    let arr = [
+      "firstName",
+      "lastName",
+      "email",
+      "role",
+      "password",
+      "region",
+      "serviceType",
+      "zipCode",
+      "isActive",
+      "budget",
+      "isAIDcertificate",
+      "isCPRcertificate",
+      "isDrivingLicense",
+      "doHouseKeeping",
+      "doMealPrep",
+      "houseKeeping",
+      "careSpecialChild",
+      "isLiven",
+      "Language",
+      "childAgeGroup",
+      "experience",
+      " aboutYourself",
+    ];
     let errArr = [];
 
     arr.forEach((x) => {
       if (!obj[x]) {
         errArr.push(x);
         console.log(x);
-
       }
     });
     if (errArr.length > 0) {
@@ -126,11 +224,13 @@ const AuthController = {
     }
   },
   adminSignup: async (req, res) => {
-    let {
-      firstName, lastName, email, role, password
-    } = req.body;
+    let { firstName, lastName, email, role, password } = req.body;
     let obj = {
-      firstName, lastName, email, role, password
+      firstName,
+      lastName,
+      email,
+      role,
+      password,
     };
     let arr = ["firstName", "lastName", "email", "role", "password"];
     let errArr = [];
@@ -251,73 +351,73 @@ const AuthController = {
     });
   },
 
-  // controllers/paymentController.js
-  createOrUpdateStripeCustomer: async (req, res) => {
-    const { userId, paymentMethodId } = req.body;
+  // // controllers/paymentController.js
+  // createOrUpdateStripeCustomer: async (req, res) => {
+  //   const { userId, paymentMethodId } = req.body;
 
-    try {
-      const user = await CommonEntity.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+  //   try {
+  //     const user = await CommonEntity.findById(userId);
+  //     if (!user) {
+  //       return res.status(404).json({ message: 'User not found' });
+  //     }
 
-      // If the user doesn't have a Stripe customer ID, create a new customer
-      if (!user.stripeCustomerId) {
-        const customer = await stripe.customers.create({
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          payment_method: paymentMethodId,
-          invoice_settings: { default_payment_method: paymentMethodId }
-        });
+  //     // If the user doesn't have a Stripe customer ID, create a new customer
+  //     if (!user.stripeCustomerId) {
+  //       const customer = await stripe.customers.create({
+  //         email: user.email,
+  //         name: `${user.firstName} ${user.lastName}`,
+  //         payment_method: paymentMethodId,
+  //         invoice_settings: { default_payment_method: paymentMethodId }
+  //       });
 
-        user.stripeCustomerId = customer.id;
-      } else {
-        // If customer exists, update their default payment method
-        await stripe.customers.update(user.stripeCustomerId, {
-          payment_method: paymentMethodId,
-          invoice_settings: { default_payment_method: paymentMethodId }
-        });
-      }
+  //       user.stripeCustomerId = customer.id;
+  //     } else {
+  //       // If customer exists, update their default payment method
+  //       await stripe.customers.update(user.stripeCustomerId, {
+  //         payment_method: paymentMethodId,
+  //         invoice_settings: { default_payment_method: paymentMethodId }
+  //       });
+  //     }
 
-      // Attach the payment method to the customer
-      await stripe.paymentMethods.attach(paymentMethodId, {
-        customer: user.stripeCustomerId,
-      });
+  //     // Attach the payment method to the customer
+  //     await stripe.paymentMethods.attach(paymentMethodId, {
+  //       customer: user.stripeCustomerId,
+  //     });
 
-      user.stripePaymentMethodId = paymentMethodId;
-      await user.save();
+  //     user.stripePaymentMethodId = paymentMethodId;
+  //     await user.save();
 
-      res.status(200).json({ message: 'Stripe customer and payment method saved', user });
-    } catch (error) {
-      res.status(500).json({ message: 'Error setting up payment method', error: error.message });
-    }
-  },
+  //     res.status(200).json({ message: 'Stripe customer and payment method saved', user });
+  //   } catch (error) {
+  //     res.status(500).json({ message: 'Error setting up payment method', error: error.message });
+  //   }
+  // },
 
-  // Charge customer for a service
-  chargeCustomer: async (req, res) => {
-    const { userId, amount, currency } = req.body;
+  // // Charge customer for a service
+  // chargeCustomer: async (req, res) => {
+  //   const { userId, amount, currency } = req.body;
 
-    try {
-      const user = await CommonEntity.findById(userId);
-      if (!user || !user.stripeCustomerId || !user.stripePaymentMethodId) {
-        return res.status(404).json({ message: 'User or payment information not found' });
-      }
+  //   try {
+  //     const user = await CommonEntity.findById(userId);
+  //     if (!user || !user.stripeCustomerId || !user.stripePaymentMethodId) {
+  //       return res.status(404).json({ message: 'User or payment information not found' });
+  //     }
 
-      // Create payment intent using the saved customer ID and payment method
-      const paymentIntent = await stripe.paymentIntents.create({
-        customer: user.stripeCustomerId,
-        amount: amount * 100, // Amount in cents
-        currency: currency || 'usd',
-        payment_method: user.stripePaymentMethodId,
-        off_session: true, // To indicate this is an off-session charge
-        confirm: true,
-      });
+  //     // Create payment intent using the saved customer ID and payment method
+  //     const paymentIntent = await stripe.paymentIntents.create({
+  //       customer: user.stripeCustomerId,
+  //       amount: amount * 100, // Amount in cents
+  //       currency: currency || 'usd',
+  //       payment_method: user.stripePaymentMethodId,
+  //       off_session: true, // To indicate this is an off-session charge
+  //       confirm: true,
+  //     });
 
-      res.status(200).json({ message: 'Payment successful', paymentIntent });
-    } catch (error) {
-      res.status(500).json({ message: 'Error processing payment', error: error.message });
-    }
-  }
+  //     res.status(200).json({ message: 'Payment successful', paymentIntent });
+  //   } catch (error) {
+  //     res.status(500).json({ message: 'Error processing payment', error: error.message });
+  //   }
+  // }
 };
 
 module.exports = AuthController;
