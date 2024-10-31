@@ -10,7 +10,7 @@ App.use(express.json());
 
 App.use(
   cors({
-    origin: "https://nanny-sitter-backend.vercel.app",
+    origin: "http://localhost:.3000",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
     preflightContinue: true,
