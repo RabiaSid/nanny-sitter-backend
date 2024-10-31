@@ -7,13 +7,14 @@ const bookingroute = require("./route/bookingroute");
 
 const App = express();
 App.use(express.json());
-// const corsOptions = {
-//   origin: "http://localhost:3000", // Adjust to your frontend's URL
-//   methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
-//   credentials: true, // Allow credentials (if needed)
-// };
 
-// App.use(cors(corsOptions));
+const corsOptions = {
+  origin: "https://nanny-sitter-backend.vercel.app",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+};
+
+App.use(cors());
 
 // Routes
 App.use("/auth", authroute);
