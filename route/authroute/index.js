@@ -1,5 +1,5 @@
 const express = require("express");
-const AuthController = require("../../controllers/authcontroller");
+const authcontroller = require("../../controllers/authcontroller");
 const route = express.Router();
 // const passport = require("passport");
 
@@ -37,14 +37,14 @@ const route = express.Router();
 //     res.redirect(process.env.CLIENT_URL);
 // });
 
-route.get("/user", AuthController.getUsers);
-route.post("/user-signup", AuthController.userSignup);
-route.post("/nanny-signup", AuthController.nannySignup);
-route.post("/admin-signup", AuthController.adminSignup);
-route.post("/login", AuthController.login);
-route.put("/:id", AuthController.editUsers);
-route.delete("/:id", AuthController.deleteUser);
-// route.post('/setup-payment', AuthController.createOrUpdateStripeCustomer);
-// route.post('/charge-customer', AuthController.chargeCustomer);
+route.get("/user", authcontroller.getUsers);
+route.post("/user-signup", authcontroller.userSignup);
+route.post("/nanny-signup", authcontroller.nannySignup);
+route.post("/admin-signup", authcontroller.adminSignup);
+route.post("/login", authcontroller.login);
+route.put("/:id", authcontroller.editUsers);
+route.delete("/:id", authcontroller.deleteUser);
+// route.post('/setup-payment', authcontroller.createOrUpdateStripeCustomer);
+// route.post('/charge-customer', authcontroller.chargeCustomer);
 
 module.exports = route;
