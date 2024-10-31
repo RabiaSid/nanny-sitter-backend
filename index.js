@@ -14,14 +14,7 @@ const corsOptions = {
   credentials: true,
 };
 
-App.use(
-  cors({
-    origin: "http://localhost:3000",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    preflightContinue: true,
-  })
-);
+App.use(cors());
 
 // Routes
 App.use("/auth", authroute);
