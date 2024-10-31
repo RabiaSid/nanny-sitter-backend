@@ -1,6 +1,4 @@
 require("dotenv").config();
-console.log("CONNECTION_STRING:", process.env.CONNECTION_STRING);
-console.log("PORT:", process.env.PORT);
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -22,12 +20,7 @@ App.use(
 App.use(passport.initialize());
 App.use(passport.session());
 App.use(express.json());
-App.use(
-  cors({
-    origin: "http://localhost:3000", // Replace with your frontend's origin
-    credentials: true,
-  })
-);
+App.use(cors());
 
 // Routes
 App.use("/auth", authRoute);
