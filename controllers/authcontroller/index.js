@@ -16,15 +16,15 @@ const AuthController = {
     });
     if (errArr.length > 0) {
       res
-        .status(400)
-        .send(SendResponse("Some Fields are missing", false, errArr));
+        .send(SendResponse("Some Fields are missing", false, errArr))
+        .status(400);
     } else {
       let userExist = await UserModel.findOne({ email: obj.email });
       if (!userExist) {
         res.status(400).send(SendResponse("Credential Error", false));
         return;
       } else {
-        let isConfirm = await bcrypt.compare(obj.password, userExist.password);
+        let isConfirm = bcrypt.compare(obj.password, userExist.password);
         if (isConfirm) {
           let token = jwt.sign({ ...userExist }, process.env.SECURE_KEY, {
             expiresIn: "24h",
@@ -35,48 +35,10 @@ const AuthController = {
               token: token,
             })
           );
-        } else {
-          res.status(400).send(SendResponse("Credential Error", false));
         }
       }
     }
   },
-
-  // login: async (req, res) => {
-  //   let { email, password } = req.body;
-  //   let obj = { email, password };
-  //   let arr = ["email", "password"];
-  //   let errArr = [];
-  //   arr.forEach((x) => {
-  //     if (!obj[x]) {
-  //       errArr.push(x);
-  //     }
-  //   });
-  //   if (errArr.length > 0) {
-  //     res
-  //       .send(SendResponse("Some Fields are missing", false, errArr))
-  //       .status(400);
-  //   } else {
-  //     let userExist = await UserModel.findOne({ email: obj.email });
-  //     if (!userExist) {
-  //       res.status(400).send(SendResponse("Credential Error", false));
-  //       return;
-  //     } else {
-  //       let isConfirm = bcrypt.compare(obj.password, userExist.password);
-  //       if (isConfirm) {
-  //         let token = jwt.sign({ ...userExist }, process.env.SECURE_KEY, {
-  //           expiresIn: "24h",
-  //         });
-  //         res.status(200).send(
-  //           SendResponse("Login Successfully", true, {
-  //             user: userExist,
-  //             token: token,
-  //           })
-  //         );
-  //       }
-  //     }
-  //   }
-  // },
   userSignup: async (req, res) => {
     let {
       firstName,
