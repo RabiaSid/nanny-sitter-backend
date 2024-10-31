@@ -20,7 +20,7 @@ App.use(
 App.use(passport.initialize());
 App.use(passport.session());
 App.use(express.json());
-App.use(cors());
+// App.use(cors());
 
 // Routes
 App.use("/auth", authRoute);
