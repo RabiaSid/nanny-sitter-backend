@@ -7,17 +7,17 @@ const AuthController = {
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
-      const obj = { email, password };
-      const requiredFields = ["email", "password"];
-      const missingFields = requiredFields.filter((field) => !obj[field]);
+      const missingFields = [];
+      if (!email) missingFields.push("email");
+      if (!password) missingFields.push("password");
 
-      if (missingFields.length > 0) {
+      if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse("Some Fields are missing", false, missingFields));
+          .send(SendResponse("Some fields are missing", false, missingFields));
       }
 
-      const userExist = await UserModel.findOne({ email: obj.email });
+      const userExist = await UserModel.findOne({ email });
       if (!userExist) {
         return res.status(400).send(SendResponse("Credential Error", false));
       }
@@ -30,7 +30,7 @@ const AuthController = {
         return res.status(400).send(SendResponse("Credential Error", false));
       }
 
-      if (!process.env.Jwt_KEY) {
+      if (!process.env.SECURE_KEY) {
         return res
           .status(500)
           .send(
@@ -38,7 +38,7 @@ const AuthController = {
           );
       }
 
-      const token = jwt.sign({ id: userExist._id }, process.env.Jwt_KEY, {
+      const token = jwt.sign({ id: userExist._id }, process.env.SECURE_KEY, {
         expiresIn: "24h",
       });
       return res
@@ -47,238 +47,157 @@ const AuthController = {
           SendResponse("Login Successfully", true, { user: userExist, token })
         );
     } catch (error) {
-      console.error("Error during login:", error);
+      console.error("Login error:", error);
       return res
         .status(500)
         .send(SendResponse("Internal Server Error", false, error.message));
     }
   },
+
   userSignup: async (req, res) => {
-    let {
-      firstName,
-      lastName,
-      email,
-      role,
-      password,
-      region,
-      serviceType,
-      shareNanny,
-      zipCode,
-      isActive,
-      parentJobDescription,
-    } = req.body;
-    let obj = {
-      firstName,
-      lastName,
-      email,
-      role,
-      password,
-      region,
-      serviceType,
-      zipCode,
-      shareNanny,
-      isActive,
-      parentJobDescription,
-    };
-    let arr = [
-      "firstName",
-      "lastName",
-      "email",
-      "role",
-      "password",
-      "region",
-      "serviceType",
-      "shareNanny",
-      "zipCode",
-      "isActive",
-      "parentJobDescription",
-    ];
-    let errArr = [];
+    try {
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "password",
+        "region",
+        "serviceType",
+        "zipCode",
+        "isActive",
+        "totalKids",
+        "sharingNanny",
+        "parentJobDescription",
+      ];
+      const missingFields = requiredFields.filter((field) => !req.body[field]);
 
-    arr.forEach((x) => {
-      if (!obj[x]) {
-        errArr.push(x);
-        console.log(x);
-      }
-    });
-
-    console.log("Incoming request body:", req.body);
-
-    if (errArr.length > 0) {
-      res.status(400).send(SendResponse(`Some Fields are Missing`, false));
-    } else {
-      obj.password = await bcrypt.hash(obj.password, 10);
-      let existingUser = await UserModel.findOne({ email });
-      if (existingUser) {
-        res
+      if (missingFields.length) {
+        return res
           .status(400)
-          .send(SendResponse("this Email is already Exist", false));
-      } else {
-        let user = new UserModel(obj);
-        await user
-          .save()
-          .then((user) => {
-            res
-              .status(200)
-              .send(SendResponse("User Created Successfully", true, user));
-          })
-          .catch((err) => {
-            res
-              .status(400)
-              .send(SendResponse("Internal Server Error", false, err));
-          });
+          .send(SendResponse("Some Fields are Missing", false, missingFields));
       }
+
+      const { email, password } = req.body;
+      const existingUser = await UserModel.findOne({ email });
+      if (existingUser) {
+        return res
+          .status(400)
+          .send(SendResponse("This Email is already Exist", false));
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new UserModel({ ...req.body, password: hashedPassword });
+      const savedUser = await newUser.save();
+
+      return res
+        .status(200)
+        .send(SendResponse("User Created Successfully", true, savedUser));
+    } catch (error) {
+      console.error("Signup error:", error);
+      return res
+        .status(500)
+        .send(SendResponse("Internal Server Error", false, error.message));
     }
   },
+
   nannySignup: async (req, res) => {
-    let {
-      firstName,
-      lastName,
-      email,
-      role,
-      password,
-      region,
-      serviceType,
-      zipCode,
-      isActive,
-      budget,
-      isAIDcertificate,
-      isCPRcertificate,
-      isDrivingLicense,
-      doHouseKeeping,
-      doMealPrep,
-      careSpecialChild,
-      isLiven,
-      Language,
-      childAgeGroup,
-      experience,
-      aboutYourself,
-    } = req.body;
-    let obj = {
-      firstName,
-      lastName,
-      email,
-      role,
-      password,
-      region,
-      serviceType,
-      zipCode,
-      isActive,
-      budget,
-      isAIDcertificate,
-      isCPRcertificate,
-      isDrivingLicense,
-      doHouseKeeping,
-      doMealPrep,
-      careSpecialChild,
-      isLiven,
-      Language,
-      childAgeGroup,
-      experience,
-      aboutYourself,
-    };
-    let arr = [
-      "firstName",
-      "lastName",
-      "email",
-      "role",
-      "password",
-      "region",
-      "serviceType",
-      "zipCode",
-      "isActive",
-      "budget",
-      "isAIDcertificate",
-      "isCPRcertificate",
-      "isDrivingLicense",
-      "doHouseKeeping",
-      "doMealPrep",
-      "careSpecialChild",
-      "isLiven",
-      "Language",
-      "childAgeGroup",
-      "experience",
-      "aboutYourself",
-    ];
-    let errArr = [];
+    try {
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "password",
+        "region",
+        "serviceType",
+        "zipCode",
+        "isActive",
+        "budget",
+        "isAIDcertificate",
+        "isCPRcertificate",
+        "isDrivingLicense",
+        "doHouseKeeping",
+        "doMealPrep",
+        "houseKeeping",
+        "careSpecialChild",
+        "isLiven",
+        "Language",
+        "childAgeGroup",
+        "experience",
+        "aboutYourself",
+      ];
+      const missingFields = requiredFields.filter((field) => !req.body[field]);
 
-    arr.forEach((x) => {
-      if (obj[x] === undefined || obj[x] === null) {
-        errArr.push(x);
-        console.log(`Missing field: ${x}`);
-      }
-    });
-
-    console.log("Incoming request body:", req.body);
-    if (errArr.length > 0) {
-      res.status(400).send(SendResponse("Some Fields are Missing", false));
-    } else {
-      obj.password = await bcrypt.hash(obj.password, 10);
-      let existingUser = await UserModel.findOne({ email });
-      if (existingUser) {
-        res
+      if (missingFields.length) {
+        return res
           .status(400)
-          .send(SendResponse("this Email is already Exist", false));
-      } else {
-        let user = new UserModel(obj);
-        await user
-          .save()
-          .then((user) => {
-            res
-              .status(200)
-              .send(SendResponse("User Created Successfully", true, user));
-          })
-          .catch((err) => {
-            res
-              .status(400)
-              .send(SendResponse("Internal Server Error", false, err));
-          });
+          .send(SendResponse("Some Fields are Missing", false, missingFields));
       }
+
+      const { email, password } = req.body;
+      const existingUser = await UserModel.findOne({ email });
+      if (existingUser) {
+        return res
+          .status(400)
+          .send(SendResponse("This Email is already Exist", false));
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new UserModel({ ...req.body, password: hashedPassword });
+      const savedUser = await newUser.save();
+
+      return res
+        .status(200)
+        .send(SendResponse("User Created Successfully", true, savedUser));
+    } catch (error) {
+      console.error("Nanny signup error:", error);
+      return res
+        .status(500)
+        .send(SendResponse("Internal Server Error", false, error.message));
     }
   },
+
   adminSignup: async (req, res) => {
-    let { firstName, lastName, email, role, password } = req.body;
-    let obj = {
-      firstName,
-      lastName,
-      email,
-      role,
-      password,
-    };
-    let arr = ["firstName", "lastName", "email", "role", "password"];
-    let errArr = [];
+    try {
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "password",
+      ];
+      const missingFields = requiredFields.filter((field) => !req.body[field]);
 
-    arr.forEach((x) => {
-      if (!obj[x]) {
-        errArr.push(x);
-      }
-    });
-    if (errArr.length > 0) {
-      res.status(400).send(SendResponse("Some Fields are Missing", false));
-    } else {
-      obj.password = await bcrypt.hash(obj.password, 10);
-      let existingUser = await UserModel.findOne({ email });
-      if (existingUser) {
-        res
+      if (missingFields.length) {
+        return res
           .status(400)
-          .send(SendResponse("this Email is already Exist", false));
-      } else {
-        let user = new UserModel(obj);
-        await user
-          .save()
-          .then((user) => {
-            res
-              .status(200)
-              .send(SendResponse("User Created Successfully", true, user));
-          })
-          .catch((err) => {
-            res
-              .status(400)
-              .send(SendResponse("Internal Server Error", false, err));
-          });
+          .send(SendResponse("Some Fields are Missing", false, missingFields));
       }
+
+      const { email, password } = req.body;
+      const existingUser = await UserModel.findOne({ email });
+      if (existingUser) {
+        return res
+          .status(400)
+          .send(SendResponse("This Email is already Exist", false));
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new UserModel({ ...req.body, password: hashedPassword });
+      const savedUser = await newUser.save();
+
+      return res
+        .status(200)
+        .send(SendResponse("User Created Successfully", true, savedUser));
+    } catch (error) {
+      console.error("Admin signup error:", error);
+      return res
+        .status(500)
+        .send(SendResponse("Internal Server Error", false, error.message));
     }
   },
+
   getUsers: async (req, res) => {
     try {
       UserModel.find({})
@@ -438,12 +357,10 @@ const AuthController = {
         .status(200)
         .json({ message: "Stripe customer and payment method saved", user });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: "Error setting up payment method",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Error setting up payment method",
+        error: error.message,
+      });
     }
   },
 
