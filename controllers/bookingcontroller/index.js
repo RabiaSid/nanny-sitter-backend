@@ -1,6 +1,7 @@
 const Booking = require('../../model/bookingmodel');
+const Nanny = require('../../model/authmodel');
 const User = require('../../model/bookingmodel')
-
+const { SendResponse } = require("../../helper/index");
 
 const BookingController = {
 
@@ -12,7 +13,8 @@ const BookingController = {
       const { location, childrenCount, childrenAges, schedule, budget } = req.body;
 
       if (!location || !childrenCount || !childrenAges || !schedule || !budget) {
-        return res.status(400).json({ message: 'All fields are required' });
+        // return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).send(SendResponse("All fields are required", true));
       }
 
       const newBooking = new Booking({
@@ -40,7 +42,7 @@ const BookingController = {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
-      const nanny = await User.findById(nannyId);
+      const nanny = await Nanny.findById(nannyId);
       if (!nanny) {
         return res.status(404).json({ message: 'Nanny not found' });
       }
@@ -66,12 +68,25 @@ const BookingController = {
   // Get all bookings (optional: for an admin view)
   getAllBookings: async (req, res) => {
     try {
-      const bookings = await Booking.find();
-      res.status(200).json(bookings);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      Booking.find({})
+        .then((result) => {
+          res.status(200).send(SendResponse("", true, result));
+        })
+        .catch((err) => {
+          res
+            .status(400)
+            .send(SendResponse("Internal Server Error", false, err));
+        });
+    } catch (e) {
+      res.status(400).send(SendResponse("Internal Server Error", false, e));
     }
+    // try {
+    //   const bookings = await Booking.find();
+    //   res.status(200).json(bookings);
+    // } catch (error) {
+    //   console.error('Error fetching bookings:', error);
+    //   res.status(500).json({ message: 'Internal server error' });
+    // }
   },
 
   // Get a booking by ID
