@@ -30,7 +30,7 @@ const AuthController = {
         return res.status(400).send(SendResponse("Credential Error", false));
       }
 
-      if (!process.env.SECURE_KEY) {
+      if (!process.env.Jwt_KEY) {
         return res
           .status(500)
           .send(
@@ -38,7 +38,7 @@ const AuthController = {
           );
       }
 
-      const token = jwt.sign({ id: userExist._id }, process.env.SECURE_KEY, {
+      const token = jwt.sign({ id: userExist._id }, process.env.Jwt_KEY, {
         expiresIn: "24h",
       });
       return res
