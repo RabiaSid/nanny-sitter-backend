@@ -15,6 +15,8 @@ App.use(express.json());
 
 App.use(cors());
 
+// App.options("*", cors());
+
 // Routes
 App.use("/auth", authroute);
 App.use("/booking", bookingroute);
