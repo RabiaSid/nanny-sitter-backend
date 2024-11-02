@@ -213,6 +213,7 @@ const AuthController = {
       res.status(400).send(SendResponse("Internal Server Error", false, e));
     }
   },
+
   getUserById: (req, res) => {
     try {
       let id = req.params.id;
@@ -247,6 +248,7 @@ const AuthController = {
     //   });
     // }
   },
+
   editUsers: async (req, res) => {
     try {
       let id = req.params.id;
@@ -284,6 +286,7 @@ const AuthController = {
       res.status(500).send(SendResponse("Internal Server Error", false, error));
     }
   },
+
   deleteUser: async (req, res) => {
     try {
       let id = req.params.id;
@@ -300,6 +303,7 @@ const AuthController = {
       res.status(400).send(SendResponse("Internal Server Error", true, e));
     }
   },
+
   protected: async (req, res, next) => {
     let token = req.headers.authorization?.split(" ")[1];
     if (!token) {

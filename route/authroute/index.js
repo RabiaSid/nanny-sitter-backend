@@ -37,8 +37,8 @@ const passport = require("passport");
 //     res.redirect(process.env.CLIENT_URL);
 // });
 
-route.get("/user", AuthController.getUsers);
-route.get("/user/:id", AuthController.getUserById);
+route.get("/", AuthController.getUsers);
+route.get("/:id", AuthController.getUserById);
 route.post("/user-signup", AuthController.userSignup);
 route.post("/nanny-signup", AuthController.nannySignup);
 route.post("/admin-signup", AuthController.adminSignup);
