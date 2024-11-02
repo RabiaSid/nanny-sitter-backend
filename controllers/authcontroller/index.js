@@ -118,7 +118,6 @@ const AuthController = {
         "isDrivingLicense",
         "doHouseKeeping",
         "doMealPrep",
-        "houseKeeping",
         "careSpecialChild",
         "isLiven",
         "Language",
