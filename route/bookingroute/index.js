@@ -1,25 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const BookingController = require('../../controllers/bookingcontroller');
+const BookingController = require("../../controllers/bookingcontroller");
 
+router.post("/chatbot-Booking", BookingController.chatBotBooking);
 
-// chatbot Request
-// Route to create a new booking
-router.post('/chatbot-Booking', BookingController.chatBotBooking);
+router.post("/", BookingController.add);
 
-// direct to nanny
-router.post('/direct-Booking', BookingController.bookDirect);
+router.get("/", BookingController.get);
 
-// Route to get all bookings (optional for admin)
-router.get('/', BookingController.getAllBookings);
+router.get("/:id", BookingController.getById);
 
-// Route to get a single booking by ID
-router.get('/:id', BookingController.getBookingById);
+router.put("/:id", BookingController.edit);
 
-// Route to update a booking (optional)
-router.put('/:id', BookingController.updateBooking);
-
-// Route to delete a booking (optional)
-router.delete('/:id', BookingController.deleteBooking);
+router.delete("/:id", BookingController.del);
 
 module.exports = router;

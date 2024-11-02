@@ -1,29 +1,34 @@
 const Booking = require("../../model/bookingmodel");
-const Nanny = require("../../model/authmodel");
+const User = require("../../model/authmodel");
 const { SendResponse } = require("../../helper/index");
 
 const BookingController = {
-  // chatbot Request
-  // Create a new booking
   chatBotBooking: async (req, res) => {
     try {
-      const { location, childrenCount, childrenAges, schedule, budget } =
-        req.body;
+      const {
+        parentId,
+        location,
+        childrenCount,
+        childrenAges,
+        schedule,
+        budget,
+      } = req.body;
 
       if (
+        !parentId ||
         !location ||
         !childrenCount ||
         !childrenAges ||
         !schedule ||
         !budget
       ) {
-        // return res.status(400).json({ message: 'All fields are required' });
         return res
           .status(400)
-          .send(SendResponse("All fields are required", true));
+          .send(SendResponse(false, "All fields are required"));
       }
 
       const newBooking = new Booking({
+        parentId,
         location,
         childrenCount,
         childrenAges,
@@ -31,31 +36,53 @@ const BookingController = {
         budget,
       });
 
+      const parent = await User.findById(parentId);
+      if (!parent) {
+        return res.status(404).send(SendResponse(false, "Parent not found"));
+      }
+
       const savedBooking = await newBooking.save();
       res
         .status(201)
-        .json({
-          message: "Booking request created successfully!",
-          booking: savedBooking,
-        });
+        .send(
+          SendResponse(
+            true,
+            "Booking request created successfully!",
+            savedBooking
+          )
+        );
     } catch (error) {
       console.error("Error creating booking:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
 
-  // direct to the nanny
-  bookDirect: async (req, res) => {
+  add: async (req, res) => {
     try {
-      const { nannyId, startTime, endTime } = req.body;
+      const { nannyId, parentId, message, startTime, endTime } = req.body;
 
-      if (!nannyId || !startTime || !endTime) {
-        return res.status(400).json({ message: "All fields are required" });
+      if (!nannyId || !parentId || !message || !startTime || !endTime) {
+        return res
+          .status(400)
+          .send(SendResponse(false, "All fields are required"));
       }
 
-      const nanny = await Nanny.findById(nannyId);
+      const newBooking = new Booking({
+        nannyId,
+        parentId,
+        message,
+        startTime,
+        endTime,
+      });
+
+      const parent = await User.findById(parentId);
+      if (!parent) {
+        return res.status(404).send(SendResponse(false, "Parent not found"));
+      }
+
+      const nanny = await User.findById(nannyId);
       if (!nanny) {
-        return res.status(404).json({ message: "Nanny not found" });
+        return res.status(404).send(SendResponse(false, "Nanny not found"));
       }
 
       const isBooked = nanny.bookings.some(
@@ -67,61 +94,53 @@ const BookingController = {
       if (isBooked) {
         return res
           .status(400)
-          .json({ message: "Nanny is already booked during this time." });
+          .send(
+            SendResponse(false, "Nanny is already booked during this time.")
+          );
       }
 
       nanny.bookings.push({ startTime, endTime });
-      await nanny.save();
-      res.status(200).json({ message: "Nanny booked successfully." });
+      const savedBooking = await newBooking.save();
+      res
+        .status(200)
+        .send(SendResponse(true, "Nanny booked successfully.", savedBooking));
     } catch (error) {
       console.error("Error booking nanny:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
 
-  // Get all bookings (optional: for an admin view)
-  getAllBookings: async (req, res) => {
+  get: async (req, res) => {
     try {
-      Booking.find({})
-        .then((result) => {
-          res.status(200).send(SendResponse("", true, result));
-        })
-        .catch((err) => {
-          res
-            .status(400)
-            .send(SendResponse("Internal Server Error", false, err));
-        });
-    } catch (e) {
-      res.status(400).send(SendResponse("Internal Server Error", false, e));
+      const bookings = await Booking.find({});
+      res
+        .status(200)
+        .send(SendResponse(true, "Bookings retrieved successfully", bookings));
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
-    // try {
-    //   const bookings = await Booking.find();
-    //   res.status(200).json(bookings);
-    // } catch (error) {
-    //   console.error('Error fetching bookings:', error);
-    //   res.status(500).json({ message: 'Internal server error' });
-    // }
   },
 
-  // Get a booking by ID
-  getBookingById: async (req, res) => {
+  getById: async (req, res) => {
     try {
       const bookingId = req.params.id;
       const booking = await Booking.findById(bookingId);
 
       if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).send(SendResponse(false, "Booking not found"));
       }
 
-      res.status(200).json(booking);
+      res
+        .status(200)
+        .send(SendResponse(true, "Booking retrieved successfully", booking));
     } catch (error) {
       console.error("Error fetching booking:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
 
-  // Update a booking (optional)
-  updateBooking: async (req, res) => {
+  edit: async (req, res) => {
     try {
       const bookingId = req.params.id;
       const {
@@ -140,33 +159,33 @@ const BookingController = {
       );
 
       if (!updatedBooking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).send(SendResponse(false, "Booking not found"));
       }
 
-      res.status(200).json({
-        message: "Booking updated successfully!",
-        booking: updatedBooking,
-      });
+      res
+        .status(200)
+        .send(
+          SendResponse(true, "Booking updated successfully", updatedBooking)
+        );
     } catch (error) {
       console.error("Error updating booking:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
 
-  // Delete a booking (optional)
-  deleteBooking: async (req, res) => {
+  del: async (req, res) => {
     try {
       const bookingId = req.params.id;
       const deletedBooking = await Booking.findByIdAndDelete(bookingId);
 
       if (!deletedBooking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).send(SendResponse(false, "Booking not found"));
       }
 
-      res.status(200).json({ message: "Booking deleted successfully!" });
+      res.status(200).send(SendResponse(true, "Booking deleted successfully"));
     } catch (error) {
       console.error("Error deleting booking:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
 };

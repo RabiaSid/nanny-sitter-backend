@@ -66,7 +66,6 @@ const AuthController = {
         "serviceType",
         "zipCode",
         "isActive",
-        "totalKids",
         "sharingNanny",
         "parentJobDescription",
       ];

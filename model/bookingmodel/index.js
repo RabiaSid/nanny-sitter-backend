@@ -3,8 +3,17 @@ const mongoose = require("mongoose");
 const BookingSchema = mongoose.Schema(
   {
     // Request to nanny
-    nannyId: { type: mongoose.Schema.Types.ObjectId, ref: "Nanny" },
-    parentId: { type: mongoose.Schema.Types.ObjectId, ref: "Parent" },
+    nannyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+    },
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+    },
+    message: {
+      type: String,
+    },
     startTime: Date,
     endTime: Date,
 
