@@ -14,12 +14,12 @@ const AuthController = {
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse("Some fields are missing", false, missingFields));
+          .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
       const userExist = await UserModel.findOne({ email });
       if (!userExist) {
-        return res.status(400).send(SendResponse("Credential Error", false));
+        return res.status(400).send(SendResponse(false, "Credential Error"));
       }
 
       const isPasswordCorrect = await bcrypt.compare(
@@ -27,14 +27,14 @@ const AuthController = {
         userExist.password
       );
       if (!isPasswordCorrect) {
-        return res.status(400).send(SendResponse("Credential Error", false));
+        return res.status(400).send(SendResponse(false, "Credential Error"));
       }
 
       if (!process.env.Jwt_KEY) {
         return res
           .status(500)
           .send(
-            SendResponse("Internal Server Error: Missing secret key", false)
+            SendResponse(false, "Internal Server Error: Missing secret key")
           );
       }
 
@@ -44,13 +44,13 @@ const AuthController = {
       return res
         .status(200)
         .send(
-          SendResponse("Login Successfully", true, { user: userExist, token })
+          SendResponse(true, "Login Successfully", { user: userExist, token })
         );
     } catch (error) {
       console.error("Login error:", error);
       return res
         .status(500)
-        .send(SendResponse("Internal Server Error", false, error.message));
+        .send(SendResponse(false, "Internal Server Error", error.message));
     }
   },
 
@@ -74,7 +74,7 @@ const AuthController = {
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse("Some Fields are Missing", false, missingFields));
+          .send(SendResponse(false, "Some Fields are Missing", missingFields));
       }
 
       const { email, password } = req.body;
@@ -82,7 +82,7 @@ const AuthController = {
       if (existingUser) {
         return res
           .status(400)
-          .send(SendResponse("This Email is already Exist", false));
+          .send(SendResponse(false, "This Email is already Exist"));
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -91,12 +91,12 @@ const AuthController = {
 
       return res
         .status(200)
-        .send(SendResponse("User Created Successfully", true, savedUser));
+        .send(SendResponse(true, "User Created Successfully", savedUser));
     } catch (error) {
       console.error("Signup error:", error);
       return res
         .status(500)
-        .send(SendResponse("Internal Server Error", false, error.message));
+        .send(SendResponse(false, "Internal Server Error", error.message));
     }
   },
 
@@ -130,7 +130,7 @@ const AuthController = {
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse("Some Fields are Missing", false, missingFields));
+          .send(SendResponse(false, "Some Fields are Missing", missingFields));
       }
 
       const { email, password } = req.body;
@@ -138,7 +138,7 @@ const AuthController = {
       if (existingUser) {
         return res
           .status(400)
-          .send(SendResponse("This Email is already Exist", false));
+          .send(SendResponse(false, "This Email is already Exist"));
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -147,12 +147,12 @@ const AuthController = {
 
       return res
         .status(200)
-        .send(SendResponse("User Created Successfully", true, savedUser));
+        .send(SendResponse(true, "User Created Successfully", savedUser));
     } catch (error) {
       console.error("Nanny signup error:", error);
       return res
         .status(500)
-        .send(SendResponse("Internal Server Error", false, error.message));
+        .send(SendResponse(false, "Internal Server Error", error.message));
     }
   },
 
@@ -170,7 +170,7 @@ const AuthController = {
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse("Some Fields are Missing", false, missingFields));
+          .send(SendResponse(false, "Some Fields are Missing", missingFields));
       }
 
       const { email, password } = req.body;
@@ -178,7 +178,7 @@ const AuthController = {
       if (existingUser) {
         return res
           .status(400)
-          .send(SendResponse("This Email is already Exist", false));
+          .send(SendResponse(false, "This Email is already Exist"));
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -187,12 +187,12 @@ const AuthController = {
 
       return res
         .status(200)
-        .send(SendResponse("User Created Successfully", true, savedUser));
+        .send(SendResponse(true, "User Created Successfully", savedUser));
     } catch (error) {
       console.error("Admin signup error:", error);
       return res
         .status(500)
-        .send(SendResponse("Internal Server Error", false, error.message));
+        .send(SendResponse(false, "Internal Server Error", error.message));
     }
   },
 
@@ -200,15 +200,15 @@ const AuthController = {
     try {
       UserModel.find({})
         .then((result) => {
-          res.status(200).send(SendResponse("", true, result));
+          res.status(200).send(SendResponse(true, "", result));
         })
         .catch((err) => {
           res
             .status(400)
-            .send(SendResponse("Internal Server Error", false, err));
+            .send(SendResponse(false, "Internal Server Error", err));
         });
     } catch (e) {
-      res.status(400).send(SendResponse("Internal Server Error", false, e));
+      res.status(400).send(SendResponse(false, "Internal Server Error", e));
     }
   },
 
@@ -218,15 +218,15 @@ const AuthController = {
 
       UserModel.findById(id)
         .then((result) => {
-          res.status(200).send(SendResponse("", true, result));
+          res.status(200).send(SendResponse(true, "", result));
         })
         .catch((err) => {
           res
             .status(400)
-            .send(SendResponse("Internal Server Error 2222", false, err));
+            .send(SendResponse(false, "Internal Server Error 2222", err));
         });
     } catch (e) {
-      res.status(400).send(SendResponse("Internal Server Error", false, e));
+      res.status(400).send(SendResponse(false, "Internal Server Error", e));
     }
     // let id = req.params.id;
 
@@ -255,7 +255,7 @@ const AuthController = {
         .exec()
         .then((existing) => {
           if (!existing) {
-            res.status(400).send(SendResponse("No record Found", false, null));
+            res.status(400).send(SendResponse(false, "No record Found", null));
           } else {
             // Use req.body for the update data, not req.params.body
             UserModel.findByIdAndUpdate(id, req.body, {
@@ -266,22 +266,22 @@ const AuthController = {
               .then((result) => {
                 res
                   .status(200)
-                  .send(SendResponse("Updated Successfully", true, result));
+                  .send(SendResponse(true, "Updated Successfully", result));
               })
               .catch((err) => {
                 res
                   .status(500)
-                  .send(SendResponse("Internal Server Error", false, err));
+                  .send(SendResponse(false, "Internal Server Error", err));
               });
           }
         })
         .catch((err) => {
           res
             .status(500)
-            .send(SendResponse("Internal Server Error", false, err));
+            .send(SendResponse(false, "Internal Server Error", err));
         });
     } catch (error) {
-      res.status(500).send(SendResponse("Internal Server Error", false, error));
+      res.status(500).send(SendResponse(false, "Internal Server Error", error));
     }
   },
 
@@ -290,28 +290,28 @@ const AuthController = {
       let id = req.params.id;
       UserModel.findByIdAndDelete(id)
         .then((result) => {
-          res.status(200).send(SendResponse("User Deleted Successfully", true));
+          res.status(200).send(SendResponse(true, "User Deleted Successfully"));
         })
         .catch((err) => {
           res
             .status(400)
-            .send(SendResponse("Internal Server Error", true, err));
+            .send(SendResponse(true, "Internal Server Error", err));
         });
     } catch (e) {
-      res.status(400).send(SendResponse("Internal Server Error", true, e));
+      res.status(400).send(SendResponse(true, "Internal Server Error", e));
     }
   },
 
   protected: async (req, res, next) => {
     let token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      res.status(401).send(SendResponse("Un Authorized", false));
+      res.status(401).send(SendResponse(false, "Un Authorized"));
       return;
     }
 
     jwt.verify(token, process.env.Jwt_KEY, (err, decoded) => {
       if (err) {
-        res.status(401).send(SendResponse("Un Authorized", false));
+        res.status(401).send(SendResponse(false, "Un Authorized"));
       } else {
         // console.log(decoded)
         next();
