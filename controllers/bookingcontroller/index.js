@@ -11,16 +11,18 @@ const BookingController = {
         childrenCount,
         childrenAges,
         schedule,
+        message,
         budget,
       } = req.body;
 
       if (
-        !parentId ||
-        !location ||
-        !childrenCount ||
-        !childrenAges ||
-        !schedule ||
-        !budget
+        (!parentId ||
+          !location ||
+          !childrenCount ||
+          !childrenAges ||
+          !schedule ||
+          !message,
+        !budget)
       ) {
         return res
           .status(400)
@@ -33,6 +35,7 @@ const BookingController = {
         childrenCount,
         childrenAges,
         schedule,
+        message,
         budget,
       });
 
