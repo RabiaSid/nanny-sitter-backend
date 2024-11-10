@@ -152,6 +152,11 @@ const UserSchema = mongoose.Schema(
 
     bookings: [{ startTime: Date, endTime: Date }],
 
+    lastSeen: { 
+      type: Date, 
+      default: Date.now
+     }
+
     // stripeCustomerId: { type: String },
     // stripePaymentMethodId: { type: String },
   },

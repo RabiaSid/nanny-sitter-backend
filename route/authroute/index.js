@@ -45,6 +45,7 @@ route.post("/admin-signup", AuthController.adminSignup);
 route.post("/login", AuthController.login);
 route.put("/:id", AuthController.editUsers);
 route.delete("/:id", AuthController.deleteUser);
+route.delete("/", AuthController.deleteAll);
 // route.post('/setup-payment', AuthController.createOrUpdateStripeCustomer);
 // route.post('/charge-customer', AuthController.chargeCustomer);
 

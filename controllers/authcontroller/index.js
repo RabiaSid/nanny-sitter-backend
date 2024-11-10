@@ -17,11 +17,13 @@ const AuthController = {
           .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
+      // Check if the user exists
       const userExist = await UserModel.findOne({ email });
       if (!userExist) {
         return res.status(400).send(SendResponse(false, "Credential Error"));
       }
 
+      // Verify the password
       const isPasswordCorrect = await bcrypt.compare(
         password,
         userExist.password
@@ -30,6 +32,7 @@ const AuthController = {
         return res.status(400).send(SendResponse(false, "Credential Error"));
       }
 
+      // If JWT secret key is missing, send an error
       if (!process.env.Jwt_KEY) {
         return res
           .status(500)
@@ -38,13 +41,23 @@ const AuthController = {
           );
       }
 
-      const token = jwt.sign({ id: userExist._id }, process.env.Jwt_KEY, {
+      // Update the user's lastSeen field to the current time
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userExist._id,
+        { lastSeen: Date.now() }, // Set lastSeen to the current time
+        { new: true } // Return the updated user document
+      );
+
+      // Create a JWT token for the user
+      const token = jwt.sign({ id: updatedUser._id }, process.env.Jwt_KEY, {
         expiresIn: "24h",
       });
+
+      // Send the response back with user details and token
       return res
         .status(200)
         .send(
-          SendResponse(true, "Login Successfully", { user: userExist, token })
+          SendResponse(true, "Login Successfully", { user: updatedUser, token })
         );
     } catch (error) {
       console.error("Login error:", error);
@@ -316,6 +329,23 @@ const AuthController = {
         next();
       }
     });
+  },
+
+  deleteAll: async (req, res) => {
+    try {
+      const deletedUser = await UserModel.deleteMany({});
+
+      if (deletedUser.deletedCount === 0) {
+        return res
+          .status(404)
+          .send(SendResponse(false, "No User found to delete"));
+      }
+
+      res.status(200).send(SendResponse(true, "All User deleted successfully"));
+    } catch (error) {
+      console.error("Error deleting all User:", error);
+      res.status(500).send(SendResponse(false, "Internal server error"));
+    }
   },
 
   // controllers/paymentController.js
