@@ -8,7 +8,7 @@ router.post("/", BookingController.add);
 
 router.get("/", BookingController.get);
 
-router.get("/", BookingController.getAll);
+router.get("/all", BookingController.getAll);
 
 router.get("/:id", BookingController.getById);
 
