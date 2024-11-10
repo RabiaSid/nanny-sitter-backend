@@ -12,17 +12,19 @@ const BookingController = {
         childrenAges,
         schedule,
         message,
+        status,
         budget,
       } = req.body;
 
       if (
-        (!parentId ||
-          !location ||
-          !childrenCount ||
-          !childrenAges ||
-          !schedule ||
-          !message,
-        !budget)
+        !parentId ||
+        !location ||
+        !childrenCount ||
+        !childrenAges ||
+        !schedule ||
+        !message ||
+        !status ||
+        !budget
       ) {
         return res
           .status(400)
@@ -36,6 +38,7 @@ const BookingController = {
         childrenAges,
         schedule,
         message,
+        status,
         budget,
       });
 
@@ -62,9 +65,17 @@ const BookingController = {
 
   add: async (req, res) => {
     try {
-      const { nannyId, parentId, message, startTime, endTime } = req.body;
+      const { nannyId, parentId, message, status, startTime, endTime } =
+        req.body;
 
-      if (!nannyId || !parentId || !message || !startTime || !endTime) {
+      if (
+        !nannyId ||
+        !parentId ||
+        !message ||
+        !status ||
+        !startTime ||
+        !endTime
+      ) {
         return res
           .status(400)
           .send(SendResponse(false, "All fields are required", res));
@@ -74,6 +85,7 @@ const BookingController = {
         nannyId,
         parentId,
         message,
+        status,
         startTime,
         endTime,
       });
