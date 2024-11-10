@@ -67,7 +67,7 @@ const BookingController = {
       if (!nannyId || !parentId || !message || !startTime || !endTime) {
         return res
           .status(400)
-          .send(SendResponse(false, "All fields are required"));
+          .send(SendResponse(false, "All fields are required", res));
       }
 
       const newBooking = new Booking({
@@ -114,6 +114,23 @@ const BookingController = {
   },
 
   get: async (req, res) => {
+    try {
+      const { nannyId } = req.query;
+      let query = {};
+
+      if (nannyId) {
+        query = { nannyId };
+      }
+
+      const result = await Booking.find(query);
+
+      res.status(200).send(SendResponse("", true, result));
+    } catch (error) {
+      res.status(500).send(SendResponse("Internal Server Error", false, error));
+    }
+  },
+
+  getAll: async (req, res) => {
     try {
       const bookings = await Booking.find({});
       res
