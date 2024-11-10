@@ -220,6 +220,23 @@ const BookingController = {
       res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
+
+  deleteAll: async (req, res) => {
+    try {
+      const deletedUser = await Booking.deleteMany({});
+
+      if (deletedUser.deletedCount === 0) {
+        return res
+          .status(404)
+          .send(SendResponse(false, "No User found to delete"));
+      }
+
+      res.status(200).send(SendResponse(true, "All User deleted successfully"));
+    } catch (error) {
+      console.error("Error deleting all User:", error);
+      res.status(500).send(SendResponse(false, "Internal server error"));
+    }
+  },
 };
 
 module.exports = BookingController;

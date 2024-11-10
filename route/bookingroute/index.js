@@ -16,4 +16,6 @@ router.put("/:id", BookingController.edit);
 
 router.delete("/:id", BookingController.del);
 
+router.delete("/", BookingController.deleteAll);
+
 module.exports = router;
