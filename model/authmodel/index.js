@@ -13,6 +13,10 @@ const UserSchema = mongoose.Schema(
       required: [true, "Last Name is Required"],
     },
 
+    image: {
+      type: String,
+    },
+
     email: {
       type: String,
       required: [true, "Email Name is Required"],
@@ -152,10 +156,10 @@ const UserSchema = mongoose.Schema(
 
     bookings: [{ startTime: Date, endTime: Date }],
 
-    lastSeen: { 
-      type: Date, 
-      default: Date.now
-     }
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
 
     // stripeCustomerId: { type: String },
     // stripePaymentMethodId: { type: String },

@@ -72,6 +72,7 @@ const AuthController = {
       const requiredFields = [
         "firstName",
         "lastName",
+        "image",
         "email",
         "role",
         "password",
@@ -118,6 +119,7 @@ const AuthController = {
         "firstName",
         "lastName",
         "email",
+        "image",
         "role",
         "password",
         "region",
@@ -345,6 +347,124 @@ const AuthController = {
     } catch (error) {
       console.error("Error deleting all User:", error);
       res.status(500).send(SendResponse(false, "Internal server error"));
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      // Validate email
+      if (!email) {
+        return res.status(400).send(SendResponse(false, "Email is required"));
+      }
+
+      // Find user by email
+      const user = await UserSchema.findOne({ email });
+      if (!user) {
+        return res.status(404).send(SendResponse(false, "User not found"));
+      }
+
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
+
+      // Generate reset token and expiry time
+      const resetToken = crypto.randomBytes(20).toString("hex");
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // Token expires in 1 hour
+
+      // Update user's reset token, expiry, and OTP in database
+      user.resetPasswordToken = resetToken;
+      user.resetPasswordExpires = resetTokenExpiry;
+      user.resetPasswordOTP = otp; // Store the OTP in the database
+      await user.save();
+
+      // Send email with OTP and reset token
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: "rabiasid984@gmail.com",
+        to: user.email,
+        subject: "Password Reset OTP",
+        text: `Your OTP for password reset is: ${otp}. Use this along with the reset token ${resetToken}.`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          return res
+            .status(500)
+            .send(SendResponse(false, "Failed to send OTP email"));
+        }
+        console.log("Email sent:", info.response);
+        return res
+          .status(200)
+          .send(SendResponse(true, "Password reset OTP sent to your email"));
+      });
+    } catch (e) {
+      console.error(e);
+      return res
+        .status(500)
+        .send(SendResponse(false, "Internal Server Error", e.message || e));
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const { resetToken, otp, password } = req.body;
+
+      // Validate inputs
+      if (!resetToken || !otp || !password) {
+        return res
+          .status(400)
+          .send(
+            SendResponse(
+              false,
+              "Reset token, OTP, and new password are required"
+            )
+          );
+      }
+
+      // Find the user by reset token and check expiry
+      const user = await UserSchema.findOne({
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: { $gt: new Date() }, // Check if expiry date is in the future
+      });
+
+      if (!user) {
+        return res
+          .status(400)
+          .send(SendResponse(false, "Invalid or expired reset token"));
+      }
+
+      // Verify OTP
+      if (user.resetPasswordOTP !== parseInt(otp, 10)) {
+        return res.status(400).send(SendResponse(false, "Invalid OTP"));
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user's password and clear reset token fields
+      user.password = hashedPassword;
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      user.resetPasswordOTP = null;
+      await user.save();
+
+      return res
+        .status(200)
+        .send(SendResponse(true, "Password reset successfully"));
+    } catch (e) {
+      console.error(e);
+      return res
+        .status(500)
+        .send(SendResponse(false, "Internal Server Error", e.message || e));
     }
   },
 
