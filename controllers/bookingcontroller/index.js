@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongoose").Types;
 const Booking = require("../../model/bookingmodel");
 const User = require("../../model/authmodel");
 const { SendResponse } = require("../../helper/index");
@@ -118,7 +119,7 @@ const BookingController = {
       const savedBooking = await newBooking.save();
       res
         .status(200)
-        .send(SendResponse(true, "Nanny booked successfully.", savedBooking));
+        .send(SendResponse("Nanny booked successfully.", true, savedBooking));
     } catch (error) {
       console.error("Error booking nanny:", error);
       res.status(500).send(SendResponse(false, "Internal server error"));
@@ -136,9 +137,9 @@ const BookingController = {
 
       const result = await Booking.find(query);
 
-      res.status(200).send(SendResponse("", true, result));
+      res.status(200).send(SendResponse(true, "", result));
     } catch (error) {
-      res.status(500).send(SendResponse("Internal Server Error", false, error));
+      res.status(500).send(SendResponse(false, "Internal Server Error", error));
     }
   },
 
