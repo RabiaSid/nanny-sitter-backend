@@ -79,7 +79,6 @@ const AuthController = {
         "region",
         "serviceType",
         "zipCode",
-        "isActive",
         "parentJobDescription",
       ];
       const missingFields = requiredFields.filter((field) => !req.body[field]);
