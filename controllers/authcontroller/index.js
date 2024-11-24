@@ -922,8 +922,10 @@ const AuthController = {
       const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
 
       // Generate reset token and expiry time
+      // const resetToken = crypto.randomBytes(20).toString("hex");
+      // const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // Token expires in 1 hour
       const resetToken = crypto.randomBytes(20).toString("hex");
-      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // Token expires in 1 hour
+      const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
       // Update user's reset token, expiry, and OTP in the database
       user.resetPasswordToken = resetToken;
