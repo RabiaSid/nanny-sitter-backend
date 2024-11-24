@@ -1,4 +1,3 @@
-const { ObjectId } = require("mongoose").Types;
 const Booking = require("../../model/bookingmodel");
 const User = require("../../model/authmodel");
 const { SendResponse } = require("../../helper/index");
