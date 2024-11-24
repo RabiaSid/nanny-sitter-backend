@@ -1,5 +1,7 @@
 const UserModel = require("../../model/authmodel");
-const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { SendResponse } = require("../../helper/index");
 
@@ -53,6 +55,26 @@ const AuthController = {
         expiresIn: "24h",
       });
 
+      // Send Welcome Back Email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: "your-email@example.com", // Replace with your email
+        to: email,
+        subject: "Welcome Back!",
+        text: `Hello ${updatedUser.firstName}, welcome back to our platform!`,
+      };
+
+      transporter.sendMail(mailOptions, (error) => {
+        if (error) console.error("Error sending email:", error);
+      });
+
       // Send the response back with user details and token
       return res
         .status(200)
@@ -67,43 +89,65 @@ const AuthController = {
     }
   },
 
-  userSignup: async (req, res) => {
+  sendOtp: async (req, res) => {
     try {
-      const requiredFields = [
-        "firstName",
-        "lastName",
-        "image",
-        "email",
-        "role",
-        "password",
-        "region",
-        "serviceType",
-        "zipCode",
-        "parentJobDescription",
-      ];
+      const { email, firstName } = req.body;
+      const requiredFields = ["email", "firstName"];
       const missingFields = requiredFields.filter((field) => !req.body[field]);
 
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse(false, "Some Fields are Missing", missingFields));
+          .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
-      const { email, password } = req.body;
       const existingUser = await UserModel.findOne({ email });
       if (existingUser) {
         return res
           .status(400)
-          .send(SendResponse(false, "This Email is already Exist"));
+          .send(SendResponse(false, "This Email is already registered"));
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new UserModel({ ...req.body, password: hashedPassword });
-      const savedUser = await newUser.save();
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000);
+
+      // Save OTP and email temporarily in DB (or use a cache like Redis)
+      // const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+      await UserModel.updateOne(
+        { email },
+        { otp: otp },
+        // { otp, otpExpiry },
+        { upsert: true } // Create document if it doesn't exist
+      );
+
+      // Send OTP via email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: "your-email@example.com",
+        to: email,
+        subject: "Verify Your OTP",
+        text: `Hi ${firstName}, your OTP for verification is ${otp}. This OTP will expire in 10 minutes.`,
+      };
+
+      transporter.sendMail(mailOptions, (error) => {
+        if (error) {
+          console.error("Error sending OTP email:", error);
+          return res
+            .status(500)
+            .send(SendResponse(false, "Failed to send OTP email"));
+        }
+      });
 
       return res
         .status(200)
-        .send(SendResponse(true, "User Created Successfully", savedUser));
+        .send(SendResponse(true, "OTP sent to your email for verification"));
     } catch (error) {
       console.error("Signup error:", error);
       return res
@@ -112,62 +156,569 @@ const AuthController = {
     }
   },
 
-  nannySignup: async (req, res) => {
-    try {
-      const requiredFields = [
-        "firstName",
-        "lastName",
-        "email",
-        "image",
-        "role",
-        "password",
-        "region",
-        "serviceType",
-        "zipCode",
-        "isActive",
-        "budget",
-        "isAIDcertificate",
-        "isCPRcertificate",
-        "isDrivingLicense",
-        "doHouseKeeping",
-        "doMealPrep",
-        "careSpecialChild",
-        "isLiven",
-        "Language",
-        "childAgeGroup",
-        "experience",
-        "aboutYourself",
-      ];
-      const missingFields = requiredFields.filter((field) => !req.body[field]);
+  // nannySignup: async (req, res) => {
+  //   try {
+  //     const { email, firstName } = req.body;
+  //     const requiredFields = [
+  //       "firstName",
+  //       "lastName",
+  //       "email",
+  //       "image",
+  //       "role",
+  //       "password",
+  //       "region",
+  //       "serviceType",
+  //       "zipCode",
+  //       "isActive",
+  //       "budget",
+  //       "isAIDcertificate",
+  //       "isCPRcertificate",
+  //       "isDrivingLicense",
+  //       "doHouseKeeping",
+  //       "doMealPrep",
+  //       "careSpecialChild",
+  //       "isLiven",
+  //       "Language",
+  //       "childAgeGroup",
+  //       "experience",
+  //       "aboutYourself",
+  //     ];
+  //     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
+  //     if (missingFields.length) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "Some fields are missing", missingFields));
+  //     }
+
+  //     const existingUser = await UserModel.findOne({ email });
+  //     if (existingUser) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "This Email is already registered"));
+  //     }
+
+  //     // Generate OTP
+  //     const otp = Math.floor(100000 + Math.random() * 900000);
+
+  //     // Save OTP and email temporarily in DB (or use a cache like Redis)
+  //     // const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+  //     await UserModel.updateOne(
+  //       { email },
+  //       { otp: otp },
+  //       // { otp, otpExpiry },
+  //       { upsert: true } // Create document if it doesn't exist
+  //     );
+
+  //     // Send OTP via email
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL,
+  //         pass: process.env.PASS,
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "your-email@example.com",
+  //       to: email,
+  //       subject: "Verify Your OTP",
+  //       text: `Hi ${firstName}, your OTP for verification is ${otp}. This OTP will expire in 10 minutes.`,
+  //     };
+
+  //     transporter.sendMail(mailOptions, (error) => {
+  //       if (error) {
+  //         console.error("Error sending OTP email:", error);
+  //         return res
+  //           .status(500)
+  //           .send(SendResponse(false, "Failed to send OTP email"));
+  //       }
+  //     });
+
+  //     return res
+  //       .status(200)
+  //       .send(SendResponse(true, "OTP sent to your email for verification"));
+  //   } catch (error) {
+  //     console.error("Signup error:", error);
+  //     return res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", error.message));
+  //   }
+  // },
+
+  signup: async (req, res) => {
+    try {
+      const {
+        firstName,
+        lastName,
+        email,
+        image,
+        role,
+        otp,
+        password,
+        region,
+        serviceType,
+        zipCode,
+        isActive,
+        budget,
+        isAIDcertificate,
+        isCPRcertificate,
+        isDrivingLicense,
+        doHouseKeeping,
+        doMealPrep,
+        careSpecialChild,
+        isLiven,
+        Language,
+        childAgeGroup,
+        experience,
+        aboutYourself,
+        parentJobDescription,
+      } = req.body;
+
+      // Validate that all required fields are included in the request
+      const requiredFields = [
+        "email", // Ensure email is present
+        "otp", // Ensure OTP is present
+        "password", // Ensure password is present
+        "firstName", // Ensure firstName is present
+        "lastName", // Ensure lastName is present
+        "role", // Ensure role is present
+      ];
+
+      const missingFields = requiredFields.filter((field) => !req.body[field]);
       if (missingFields.length) {
         return res
           .status(400)
-          .send(SendResponse(false, "Some Fields are Missing", missingFields));
+          .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
-      const { email, password } = req.body;
-      const existingUser = await UserModel.findOne({ email });
-      if (existingUser) {
-        return res
-          .status(400)
-          .send(SendResponse(false, "This Email is already Exist"));
+      // Debugging logs
+      console.log("Received input:", { email, otp, password });
+
+      // Fetch user by email
+      const user = await UserModel.findOne({ email });
+
+      // Log fetched user data
+      console.log("Fetched user from DB:", user);
+
+      if (!user) {
+        return res.status(404).send(SendResponse(false, "User not found"));
       }
 
+      // Verify OTP
+      if (user.otp !== parseInt(otp, 10)) {
+        console.log("Invalid OTP:", { expected: user.otp, received: otp });
+        return res.status(400).send(SendResponse(false, "Invalid OTP"));
+      }
+
+      // Check OTP expiry (if you choose to implement expiry again)
+      // if (user.otpExpiry < Date.now()) {
+      //   return res.status(400).send(SendResponse(false, "OTP has expired"));
+      // }
+
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new UserModel({ ...req.body, password: hashedPassword });
-      const savedUser = await newUser.save();
+      user.password = hashedPassword;
+
+      // Update the missing fields (including 'role' which was missing earlier)
+      // user.firstName = firstName;
+      // user.lastName = lastName;
+      // user.email = email;
+      // user.role = role; // Make sure to add the role
+      // user.otp = null; // Clear OTP after successful verification
+
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.email = email;
+      user.image = image;
+      user.role = role; // Fixed here
+      user.otp = otp;
+      user.password = hashedPassword; // Use the hashed password here
+      user.region = region;
+      user.serviceType = serviceType;
+      user.zipCode = zipCode;
+      user.isActive = isActive;
+      user.budget = budget;
+      user.isAIDcertificate = isAIDcertificate;
+      user.isCPRcertificate = isCPRcertificate;
+      user.isDrivingLicense = isDrivingLicense;
+      user.doHouseKeeping = doHouseKeeping;
+      user.doMealPrep = doMealPrep;
+      user.careSpecialChild = careSpecialChild;
+      user.isLiven = isLiven;
+      user.Language = Language;
+      user.childAgeGroup = childAgeGroup;
+      user.experience = experience;
+      user.aboutYourself = aboutYourself;
+      user.parentJobDescription = parentJobDescription;
+
+      // Save the updated user object
+      await user.save();
+
+      // Send success email after user account creation
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL, // Your email here
+          pass: process.env.PASS, // Your email password here
+        },
+      });
+
+      const mailOptions = {
+        from: "your-email@example.com", // Replace with your email
+        to: user.email,
+        subject: "Account Created Successfully",
+        text: `Dear ${firstName},\n\nYour account has been successfully created. Welcome to our platform!\n\nThank you for signing up with us.\n\nBest regards,\nYour Team`,
+      };
+
+      // Send the email
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending confirmation email:", error);
+          return res
+            .status(500)
+            .send(SendResponse(false, "Failed to send confirmation email"));
+        } else {
+          console.log("Confirmation email sent:", info.response);
+        }
+      });
 
       return res
         .status(200)
-        .send(SendResponse(true, "User Created Successfully", savedUser));
+        .send(
+          SendResponse(
+            true,
+            "User created successfully and confirmation email sent"
+          )
+        );
     } catch (error) {
-      console.error("Nanny signup error:", error);
+      console.error("OTP Verification error:", error);
       return res
         .status(500)
         .send(SendResponse(false, "Internal Server Error", error.message));
     }
   },
+
+  // userSignup: async (req, res) => {
+  //   try {
+  //     const { email, firstName } = req.body;
+  //     const requiredFields = [
+  //       "firstName",
+  //       "lastName",
+  //       "image",
+  //       "email",
+  //       "role",
+  //       "password",
+  //       "region",
+  //       "serviceType",
+  //       "zipCode",
+  //       "parentJobDescription",
+  //     ];
+  //     const missingFields = requiredFields.filter((field) => !req.body[field]);
+
+  //     if (missingFields.length) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "Some fields are missing", missingFields));
+  //     }
+
+  //     const existingUser = await UserModel.findOne({ email });
+  //     if (existingUser) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "This Email is already registered"));
+  //     }
+
+  //     // Generate OTP
+  //     const otp = Math.floor(100000 + Math.random() * 900000);
+
+  //     // Save OTP and email temporarily in DB (or use a cache like Redis)
+  //     // const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+  //     await UserModel.updateOne(
+  //       { email },
+  //       { otp: otp },
+  //       // { otp, otpExpiry },
+  //       { upsert: true } // Create document if it doesn't exist
+  //     );
+
+  //     // Send OTP via email
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL,
+  //         pass: process.env.PASS,
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "your-email@example.com",
+  //       to: email,
+  //       subject: "Verify Your OTP",
+  //       text: `Hi ${firstName}, your OTP for verification is ${otp}. This OTP will expire in 10 minutes.`,
+  //     };
+
+  //     transporter.sendMail(mailOptions, (error) => {
+  //       if (error) {
+  //         console.error("Error sending OTP email:", error);
+  //         return res
+  //           .status(500)
+  //           .send(SendResponse(false, "Failed to send OTP email"));
+  //       }
+  //     });
+
+  //     return res
+  //       .status(200)
+  //       .send(SendResponse(true, "OTP sent to your email for verification"));
+  //   } catch (error) {
+  //     console.error("Signup error:", error);
+  //     return res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", error.message));
+  //   }
+  // },
+
+  // nannySignup: async (req, res) => {
+  //   try {
+  //     const { email, firstName } = req.body;
+  //     const requiredFields = [
+  //       "firstName",
+  //       "lastName",
+  //       "email",
+  //       "image",
+  //       "role",
+  //       "password",
+  //       "region",
+  //       "serviceType",
+  //       "zipCode",
+  //       "isActive",
+  //       "budget",
+  //       "isAIDcertificate",
+  //       "isCPRcertificate",
+  //       "isDrivingLicense",
+  //       "doHouseKeeping",
+  //       "doMealPrep",
+  //       "careSpecialChild",
+  //       "isLiven",
+  //       "Language",
+  //       "childAgeGroup",
+  //       "experience",
+  //       "aboutYourself",
+  //     ];
+  //     const missingFields = requiredFields.filter((field) => !req.body[field]);
+
+  //     if (missingFields.length) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "Some fields are missing", missingFields));
+  //     }
+
+  //     const existingUser = await UserModel.findOne({ email });
+  //     if (existingUser) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "This Email is already registered"));
+  //     }
+
+  //     // Generate OTP
+  //     const otp = Math.floor(100000 + Math.random() * 900000);
+
+  //     // Save OTP and email temporarily in DB (or use a cache like Redis)
+  //     // const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+  //     await UserModel.updateOne(
+  //       { email },
+  //       { otp: otp },
+  //       // { otp, otpExpiry },
+  //       { upsert: true } // Create document if it doesn't exist
+  //     );
+
+  //     // Send OTP via email
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL,
+  //         pass: process.env.PASS,
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "your-email@example.com",
+  //       to: email,
+  //       subject: "Verify Your OTP",
+  //       text: `Hi ${firstName}, your OTP for verification is ${otp}. This OTP will expire in 10 minutes.`,
+  //     };
+
+  //     transporter.sendMail(mailOptions, (error) => {
+  //       if (error) {
+  //         console.error("Error sending OTP email:", error);
+  //         return res
+  //           .status(500)
+  //           .send(SendResponse(false, "Failed to send OTP email"));
+  //       }
+  //     });
+
+  //     return res
+  //       .status(200)
+  //       .send(SendResponse(true, "OTP sent to your email for verification"));
+  //   } catch (error) {
+  //     console.error("Signup error:", error);
+  //     return res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", error.message));
+  //   }
+  // },
+
+  // verifyOTP: async (req, res) => {
+  //   try {
+  //     const {
+  //       firstName,
+  //       lastName,
+  //       email,
+  //       image,
+  //       role,
+  //       otp,
+  //       password,
+  //       region,
+  //       serviceType,
+  //       zipCode,
+  //       isActive,
+  //       budget,
+  //       isAIDcertificate,
+  //       isCPRcertificate,
+  //       isDrivingLicense,
+  //       doHouseKeeping,
+  //       doMealPrep,
+  //       careSpecialChild,
+  //       isLiven,
+  //       Language,
+  //       childAgeGroup,
+  //       experience,
+  //       aboutYourself,
+  //       parentJobDescription,
+  //     } = req.body;
+
+  //     // Validate that all required fields are included in the request
+  //     const requiredFields = [
+  //       "email", // Ensure email is present
+  //       "otp", // Ensure OTP is present
+  //       "password", // Ensure password is present
+  //       "firstName", // Ensure firstName is present
+  //       "lastName", // Ensure lastName is present
+  //       "role", // Ensure role is present
+  //     ];
+
+  //     const missingFields = requiredFields.filter((field) => !req.body[field]);
+  //     if (missingFields.length) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "Some fields are missing", missingFields));
+  //     }
+
+  //     // Debugging logs
+  //     console.log("Received input:", { email, otp, password });
+
+  //     // Fetch user by email
+  //     const user = await UserModel.findOne({ email });
+
+  //     // Log fetched user data
+  //     console.log("Fetched user from DB:", user);
+
+  //     if (!user) {
+  //       return res.status(404).send(SendResponse(false, "User not found"));
+  //     }
+
+  //     // Verify OTP
+  //     if (user.otp !== parseInt(otp, 10)) {
+  //       console.log("Invalid OTP:", { expected: user.otp, received: otp });
+  //       return res.status(400).send(SendResponse(false, "Invalid OTP"));
+  //     }
+
+  //     // Check OTP expiry (if you choose to implement expiry again)
+  //     // if (user.otpExpiry < Date.now()) {
+  //     //   return res.status(400).send(SendResponse(false, "OTP has expired"));
+  //     // }
+
+  //     // Hash password
+  //     const hashedPassword = await bcrypt.hash(password, 10);
+  //     user.password = hashedPassword;
+
+  //     // Update the missing fields (including 'role' which was missing earlier)
+  //     // user.firstName = firstName;
+  //     // user.lastName = lastName;
+  //     // user.email = email;
+  //     // user.role = role; // Make sure to add the role
+  //     // user.otp = null; // Clear OTP after successful verification
+
+  //     user.firstName = firstName;
+  //     user.lastName = lastName;
+  //     user.email = email;
+  //     user.image = image;
+  //     user.role = role; // Fixed here
+  //     user.otp = otp;
+  //     user.password = hashedPassword; // Use the hashed password here
+  //     user.region = region;
+  //     user.serviceType = serviceType;
+  //     user.zipCode = zipCode;
+  //     user.isActive = isActive;
+  //     user.budget = budget;
+  //     user.isAIDcertificate = isAIDcertificate;
+  //     user.isCPRcertificate = isCPRcertificate;
+  //     user.isDrivingLicense = isDrivingLicense;
+  //     user.doHouseKeeping = doHouseKeeping;
+  //     user.doMealPrep = doMealPrep;
+  //     user.careSpecialChild = careSpecialChild;
+  //     user.isLiven = isLiven;
+  //     user.Language = Language;
+  //     user.childAgeGroup = childAgeGroup;
+  //     user.experience = experience;
+  //     user.aboutYourself = aboutYourself;
+  //     user.parentJobDescription = parentJobDescription;
+
+  //     // Save the updated user object
+  //     await user.save();
+
+  //     // Send success email after user account creation
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL, // Your email here
+  //         pass: process.env.PASS, // Your email password here
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "your-email@example.com", // Replace with your email
+  //       to: user.email,
+  //       subject: "Account Created Successfully",
+  //       text: `Dear ${firstName},\n\nYour account has been successfully created. Welcome to our platform!\n\nThank you for signing up with us.\n\nBest regards,\nYour Team`,
+  //     };
+
+  //     // Send the email
+  //     transporter.sendMail(mailOptions, (error, info) => {
+  //       if (error) {
+  //         console.error("Error sending confirmation email:", error);
+  //         return res
+  //           .status(500)
+  //           .send(SendResponse(false, "Failed to send confirmation email"));
+  //       } else {
+  //         console.log("Confirmation email sent:", info.response);
+  //       }
+  //     });
+
+  //     return res
+  //       .status(200)
+  //       .send(
+  //         SendResponse(
+  //           true,
+  //           "User created successfully and confirmation email sent"
+  //         )
+  //       );
+  //   } catch (error) {
+  //     console.error("OTP Verification error:", error);
+  //     return res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", error.message));
+  //   }
+  // },
 
   adminSignup: async (req, res) => {
     try {
@@ -359,10 +910,13 @@ const AuthController = {
       }
 
       // Find user by email
-      const user = await UserSchema.findOne({ email });
+      const user = await UserModel.findOne({ email });
+
       if (!user) {
         return res.status(404).send(SendResponse(false, "User not found"));
       }
+
+      console.log("User found:", user); // Log the user object to check its state
 
       // Generate OTP
       const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
@@ -371,11 +925,13 @@ const AuthController = {
       const resetToken = crypto.randomBytes(20).toString("hex");
       const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // Token expires in 1 hour
 
-      // Update user's reset token, expiry, and OTP in database
+      // Update user's reset token, expiry, and OTP in the database
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpires = resetTokenExpiry;
-      user.resetPasswordOTP = otp; // Store the OTP in the database
-      await user.save();
+      user.resetPasswordOTP = otp;
+
+      // Save the user, bypassing validation if necessary
+      await user.save({ validateBeforeSave: false }); // Bypass validation if needed
 
       // Send email with OTP and reset token
       const transporter = nodemailer.createTransport({
@@ -387,7 +943,7 @@ const AuthController = {
       });
 
       const mailOptions = {
-        from: "rabiasid984@gmail.com",
+        from: "rabiasid984@gmail.com", // Update this with your email
         to: user.email,
         subject: "Password Reset OTP",
         text: `Your OTP for password reset is: ${otp}. Use this along with the reset token ${resetToken}.`,
@@ -413,37 +969,101 @@ const AuthController = {
     }
   },
 
+  // forgotPassword: async (req, res) => {
+  //   try {
+  //     const { email } = req.body;
+
+  //     // Validate email
+  //     if (!email) {
+  //       return res.status(400).send(SendResponse(false, "Email is required"));
+  //     }
+
+  //     // Find user by email
+  //     const user = await UserModel.findOne({ email });
+
+  //     if (!user) {
+  //       return res.status(404).send(SendResponse(false, "User not found"));
+  //     }
+
+  //     // Generate OTP
+  //     const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
+
+  //     // Generate reset token and expiry time
+  //     const resetToken = crypto.randomBytes(20).toString("hex");
+  //     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // Token expires in 1 hour
+
+  //     // Update user's reset token, expiry, and OTP in the database
+  //     user.resetPasswordToken = resetToken;
+  //     user.resetPasswordExpires = resetTokenExpiry;
+  //     user.resetPasswordOTP = otp;
+  //     await user.save(); // Save the updated user document
+
+  //     // Send email with OTP and reset token
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL,
+  //         pass: process.env.PASS,
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "rabiasid984@gmail.com", // Update this with your email
+  //       to: user.email,
+  //       subject: "Password Reset OTP",
+  //       text: `Your OTP for password reset is: ${otp}. Use this along with the reset token ${resetToken}.`,
+  //     };
+
+  //     transporter.sendMail(mailOptions, (error, info) => {
+  //       if (error) {
+  //         console.error("Error sending email:", error);
+  //         return res
+  //           .status(500)
+  //           .send(SendResponse(false, "Failed to send OTP email"));
+  //       }
+  //       console.log("Email sent:", info.response);
+  //       return res
+  //         .status(200)
+  //         .send(SendResponse(true, "Password reset OTP sent to your email"));
+  //     });
+  //   } catch (e) {
+  //     console.error(e);
+  //     return res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", e.message || e));
+  //   }
+  // },
+
   resetPassword: async (req, res) => {
     try {
       const { resetToken, otp, password } = req.body;
 
       // Validate inputs
       if (!resetToken || !otp || !password) {
-        return res
-          .status(400)
-          .send(
-            SendResponse(
-              false,
-              "Reset token, OTP, and new password are required"
-            )
-          );
+        return res.status(400).send({
+          isSuccessfull: false,
+          message: "Reset token, OTP, and new password are required",
+        });
       }
 
       // Find the user by reset token and check expiry
-      const user = await UserSchema.findOne({
+      const user = await UserModel.findOne({
         resetPasswordToken: resetToken,
-        resetPasswordExpires: { $gt: new Date() }, // Check if expiry date is in the future
+        resetPasswordExpires: { $gt: Date.now() }, // Ensure the token is not expired
       });
 
       if (!user) {
-        return res
-          .status(400)
-          .send(SendResponse(false, "Invalid or expired reset token"));
+        return res.status(400).send({
+          isSuccessfull: false,
+          message: "Invalid or expired reset token",
+        });
       }
 
       // Verify OTP
       if (user.resetPasswordOTP !== parseInt(otp, 10)) {
-        return res.status(400).send(SendResponse(false, "Invalid OTP"));
+        return res
+          .status(400)
+          .send({ isSuccessfull: false, message: "Invalid OTP" });
       }
 
       // Hash the new password
@@ -454,16 +1074,20 @@ const AuthController = {
       user.resetPasswordToken = null;
       user.resetPasswordExpires = null;
       user.resetPasswordOTP = null;
-      await user.save();
+
+      // Save the user, bypassing the validation for missing required fields
+      await user.save({ validateBeforeSave: false });
 
       return res
         .status(200)
-        .send(SendResponse(true, "Password reset successfully"));
+        .send({ isSuccessfull: true, message: "Password reset successfully" });
     } catch (e) {
       console.error(e);
-      return res
-        .status(500)
-        .send(SendResponse(false, "Internal Server Error", e.message || e));
+      return res.status(500).send({
+        isSuccessfull: false,
+        message: "Internal Server Error",
+        error: e.message || e,
+      });
     }
   },
 

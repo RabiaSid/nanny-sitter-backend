@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const UserSchema = mongoose.Schema(
   {
     // common entities
+    // _id: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   auto: true, // Auto-generate _id
+    // },
     firstName: {
       type: String,
       required: [true, "First Name is Required"],
@@ -159,6 +163,23 @@ const UserSchema = mongoose.Schema(
     lastSeen: {
       type: Date,
       default: Date.now,
+    },
+
+    resetPasswordToken: {
+      type: String,
+    },
+
+    resetPasswordExpires: {
+      type: Date,
+      default: Date.now,
+    },
+
+    resetPasswordOTP: {
+      type: Number,
+    },
+
+    otp: {
+      type: Number,
     },
 
     // stripeCustomerId: { type: String },

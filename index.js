@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const authroute = require("./route/authroute");
 const bookingroute = require("./route/bookingroute");
+const sendEmailRoute = require("./route/sendemailroute");
 
 const App = express();
 App.use(express.json());
@@ -20,6 +21,7 @@ App.use(cors());
 // Routes
 App.use("/auth", authroute);
 App.use("/booking", bookingroute);
+App.use("/sendEmail", sendEmailRoute);
 App.get("/", (req, res) => {
   res.send({ message: "Server Started" });
 });

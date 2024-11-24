@@ -4,10 +4,11 @@ const User = require("../../model/authmodel");
 const { SendResponse } = require("../../helper/index");
 
 const BookingController = {
-  chatBotBooking: async (req, res) => {
+  add: async (req, res) => {
     try {
       const {
         parentId,
+        nannyId,
         location,
         childrenCount,
         childrenAges,
@@ -34,6 +35,7 @@ const BookingController = {
 
       const newBooking = new Booking({
         parentId,
+        nannyId,
         location,
         childrenCount,
         childrenAges,
@@ -63,68 +65,68 @@ const BookingController = {
       res.status(500).send(SendResponse(false, "Internal server error"));
     }
   },
+  // user
+  // add: async (req, res) => {
+  //   try {
+  //     const { nannyId, parentId, message, status, startTime, endTime } =
+  //       req.body;
 
-  add: async (req, res) => {
-    try {
-      const { nannyId, parentId, message, status, startTime, endTime } =
-        req.body;
+  //     if (
+  //       !nannyId ||
+  //       !parentId ||
+  //       !message ||
+  //       !status ||
+  //       !startTime ||
+  //       !endTime
+  //     ) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "All fields are required", res));
+  //     }
 
-      if (
-        !nannyId ||
-        !parentId ||
-        !message ||
-        !status ||
-        !startTime ||
-        !endTime
-      ) {
-        return res
-          .status(400)
-          .send(SendResponse(false, "All fields are required", res));
-      }
+  //     const newBooking = new Booking({
+  //       nannyId,
+  //       parentId,
+  //       message,
+  //       status,
+  //       startTime,
+  //       endTime,
+  //     });
 
-      const newBooking = new Booking({
-        nannyId,
-        parentId,
-        message,
-        status,
-        startTime,
-        endTime,
-      });
+  //     const parent = await User.findById(parentId);
+  //     if (!parent) {
+  //       return res.status(404).send(SendResponse(false, "Parent not found"));
+  //     }
 
-      const parent = await User.findById(parentId);
-      if (!parent) {
-        return res.status(404).send(SendResponse(false, "Parent not found"));
-      }
+  //     const nanny = await User.findById(nannyId);
+  //     if (!nanny) {
+  //       return res.status(404).send(SendResponse(false, "Nanny not found"));
+  //     }
 
-      const nanny = await User.findById(nannyId);
-      if (!nanny) {
-        return res.status(404).send(SendResponse(false, "Nanny not found"));
-      }
+  //     const isBooked = nanny.bookings.some(
+  //       (booking) =>
+  //         (startTime >= booking.startTime && startTime < booking.endTime) ||
+  //         (endTime > booking.startTime && endTime <= booking.endTime)
+  //     );
 
-      const isBooked = nanny.bookings.some(
-        (booking) =>
-          (startTime >= booking.startTime && startTime < booking.endTime) ||
-          (endTime > booking.startTime && endTime <= booking.endTime)
-      );
+  //     if (isBooked) {
+  //       return res
+  //         .status(400)
+  //         .send(
+  //           SendResponse(false, "Nanny is already booked during this time.")
+  //         );
+  //     }
 
-      if (isBooked) {
-        return res
-          .status(400)
-          .send(
-            SendResponse(false, "Nanny is already booked during this time.")
-          );
-      }
-
-      nanny.bookings.push({ startTime, endTime });
-      const savedBooking = await newBooking.save();
-      res
-        .status(200)
-        .send(SendResponse("Nanny booked successfully.", true, savedBooking));
-    } catch (error) {
-      console.error("Error booking nanny:", error);
-      res.status(500).send(SendResponse(false, "Internal server error"));
-    }
-  },
+  //     nanny.bookings.push({ startTime, endTime });
+  //     const savedBooking = await newBooking.save();
+  //     res
+  //       .status(200)
+  //       .send(SendResponse("Nanny booked successfully.", true, savedBooking));
+  //   } catch (error) {
+  //     console.error("Error booking nanny:", error);
+  //     res.status(500).send(SendResponse(false, "Internal server error"));
+  //   }
+  // },
 
   get: async (req, res) => {
     try {
