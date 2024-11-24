@@ -959,7 +959,9 @@ const AuthController = {
         console.log("Email sent:", info.response);
         return res
           .status(200)
-          .send(SendResponse(true, "Password reset OTP sent to your email"));
+          .send(
+            SendResponse(true, "Password reset OTP sent to your email", user)
+          );
       });
     } catch (e) {
       console.error(e);
