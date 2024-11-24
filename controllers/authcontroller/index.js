@@ -1080,9 +1080,11 @@ const AuthController = {
       // Save the user, bypassing the validation for missing required fields
       await user.save({ validateBeforeSave: false });
 
-      return res
-        .status(200)
-        .send({ isSuccessfull: true, message: "Password reset successfully" });
+      return res.status(200).send({
+        isSuccessfull: true,
+        message: "Password reset successfully",
+        user,
+      });
     } catch (e) {
       console.error(e);
       return res.status(500).send({
