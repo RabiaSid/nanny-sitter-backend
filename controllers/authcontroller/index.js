@@ -101,12 +101,12 @@ const AuthController = {
           .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
-      const existingUser = await UserModel.findOne({ email });
-      if (existingUser) {
-        return res
-          .status(400)
-          .send(SendResponse(false, "This Email is already registered"));
-      }
+      // const existingUser = await UserModel.findOne({ email });
+      // if (existingUser) {
+      //   return res
+      //     .status(400)
+      //     .send(SendResponse(false, "This Email is already registered"));
+      // }
 
       // Generate OTP
       const otp = Math.floor(100000 + Math.random() * 900000);
