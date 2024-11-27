@@ -121,9 +121,9 @@ const AuthController = {
 
       const mailOptions = {
         from: "rabiasid984@gmail.com",
-        to: UserModel.email,
+        to: email,
         subject: "Verify Your OTP",
-        text: `Hi ${firstName}, your OTP is ${otp}. It expires in 10 minutes.`,
+        text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
       };
 
       transporter.sendMail(mailOptions, (error) => {
