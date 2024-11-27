@@ -123,24 +123,33 @@ const AuthController = {
 
       const mailOptions = {
         from: "rabiasid984@gmail.com",
-        to: email,
+        to: UserModel.email,
         subject: "Verify Your OTP",
         text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
       };
 
-      transporter.sendMail(mailOptions, (error) => {
+      // transporter.sendMail(mailOptions, (error) => {
+      //   if (error) {
+      //     console.error("Error sending email:", error);
+      //     return res
+      //       .status(500)
+      //       .send(SendResponse(false, "Error sending OTP email:"));
+      //   }
+      //   console.log("Email sent:", info.response);
+      //   return res
+      //     .status(200)
+      //     .send(
+      //       SendResponse(true, "Password reset OTP sent to your email", user)
+      //     );
+      // });
+      transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("Error sending email:", error);
           return res
             .status(500)
-            .send(SendResponse(false, "Error sending OTP email:"));
+            .send(SendResponse(false, "Error sending OTP email", error));
         }
         console.log("Email sent:", info.response);
-        return res
-          .status(200)
-          .send(
-            SendResponse(true, "Password reset OTP sent to your email", user)
-          );
       });
       // });
     } catch (error) {
