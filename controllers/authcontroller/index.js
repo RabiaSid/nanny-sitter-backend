@@ -112,46 +112,46 @@ const AuthController = {
       res.status(200).send(SendResponse(true, "OTP sent for verification"));
 
       // Send email asynchronously
-      // setImmediate(() => {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.PASS,
-        },
-      });
+      setImmediate(() => {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL,
+            pass: process.env.PASS,
+          },
+        });
 
-      const mailOptions = {
-        from: "rabiasid984@gmail.com",
-        to: UserModel.email,
-        subject: "Verify Your OTP",
-        text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
-      };
+        const mailOptions = {
+          from: "rabiasid984@gmail.com",
+          to: UserModel.email,
+          subject: "Verify Your OTP",
+          text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
+        };
 
-      // transporter.sendMail(mailOptions, (error) => {
-      //   if (error) {
-      //     console.error("Error sending email:", error);
-      //     return res
-      //       .status(500)
-      //       .send(SendResponse(false, "Error sending OTP email:"));
-      //   }
-      //   console.log("Email sent:", info.response);
-      //   return res
-      //     .status(200)
-      //     .send(
-      //       SendResponse(true, "Password reset OTP sent to your email", user)
-      //     );
-      // });
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error);
-          return res
-            .status(500)
-            .send(SendResponse(false, "Error sending OTP email", error));
-        }
-        console.log("Email sent:", info.response);
+        // transporter.sendMail(mailOptions, (error) => {
+        //   if (error) {
+        //     console.error("Error sending email:", error);
+        //     return res
+        //       .status(500)
+        //       .send(SendResponse(false, "Error sending OTP email:"));
+        //   }
+        //   console.log("Email sent:", info.response);
+        //   return res
+        //     .status(200)
+        //     .send(
+        //       SendResponse(true, "Password reset OTP sent to your email", user)
+        //     );
+        // });
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Error sending email:", error);
+            return res
+              .status(500)
+              .send(SendResponse(false, "Error sending OTP email", error));
+          }
+          console.log("Email sent:", info.response);
+        });
       });
-      // });
     } catch (error) {
       console.error("Error in sendOtp:", error);
       res
