@@ -110,28 +110,28 @@ const AuthController = {
       res.status(200).send(SendResponse(true, "OTP sent for verification"));
 
       // Send email asynchronously
-      setImmediate(() => {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASS,
-          },
-        });
-
-        const mailOptions = {
-          from: "your-email@example.com",
-          to: email,
-          subject: "Verify Your OTP",
-          text: `Hi ${firstName}, your OTP is ${otp}. It expires in 10 minutes.`,
-        };
-
-        transporter.sendMail(mailOptions, (error) => {
-          if (error) {
-            console.error("Error sending OTP email:", error);
-          }
-        });
+      // setImmediate(() => {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
+        },
       });
+
+      const mailOptions = {
+        from: "your-email@example.com",
+        to: email,
+        subject: "Verify Your OTP",
+        text: `Hi ${firstName}, your OTP is ${otp}. It expires in 10 minutes.`,
+      };
+
+      transporter.sendMail(mailOptions, (error) => {
+        if (error) {
+          console.error("Error sending OTP email:", error);
+        }
+      });
+      // });
     } catch (error) {
       console.error("Error in sendOtp:", error);
       res
