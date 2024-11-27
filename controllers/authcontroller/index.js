@@ -91,46 +91,97 @@ const AuthController = {
     }
   },
 
+  // sendOtp: async (req, res) => {
+  //   try {
+  //     const { email, firstName } = req.body;
+
+  //     const requiredFields = ["email", "firstName"];
+  //     const missingFields = requiredFields.filter((field) => !req.body[field]);
+
+  //     if (missingFields.length) {
+  //       return res
+  //         .status(400)
+  //         .send(SendResponse(false, "Some fields are missing", missingFields));
+  //     }
+
+  //     const otp = Math.floor(100000 + Math.random() * 900000);
+
+  //     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+
+  //     otpStore[email] = { otp, expires: otpExpire }; // 5 minutes expiry
+
+  //     const transporter = nodemailer.createTransport({
+  //       service: "gmail",
+  //       auth: {
+  //         user: process.env.EMAIL,
+  //         pass: process.env.PASS,
+  //       },
+  //     });
+
+  //     const mailOptions = {
+  //       from: "rabiasid984@gmail.com",
+  //       to: email, // Use the email from req.body
+  //       subject: "Verify Your OTP",
+  //       text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
+  //     };
+
+  //     await transporter.sendMail(mailOptions);
+
+  //     res.status(200).json({ message: "OTP sent successfully" });
+  //   } catch (error) {
+  //     console.error("Error in sendOtp:", error);
+  //     res
+  //       .status(500)
+  //       .send(SendResponse(false, "Internal Server Error", error.message));
+  //   }
+  // },
+
+  // ---------------------------
+
   sendOtp: async (req, res) => {
     try {
       const { email, firstName } = req.body;
 
-      const requiredFields = ["email", "firstName"];
-      const missingFields = requiredFields.filter((field) => !req.body[field]);
-
-      if (missingFields.length) {
+      // Validate required fields
+      if (!email || !firstName) {
         return res
           .status(400)
-          .send(SendResponse(false, "Some fields are missing", missingFields));
+          .send(SendResponse(false, "Email and firstName are required"));
       }
 
+      // Generate a 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000);
 
-      otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 minutes expiry
+      // Store OTP with 5 minutes expiration
+      otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
 
+      // Configure the email transporter
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.EMAIL,
-          pass: process.env.PASS,
+          user: process.env.EMAIL, // Your email
+          pass: process.env.PASS, // Your email password
         },
       });
 
+      // Define email options
       const mailOptions = {
-        from: "rabiasid984@gmail.com",
-        to: email, // Use the email from req.body
-        subject: "Verify Your OTP",
-        text: `Hi ${firstName}, your OTP"s is ${otp}. It expires in 10 minutes.`,
+        from: process.env.EMAIL,
+        to: email,
+        subject: "Your OTP Code",
+        text: `Hi ${firstName}, your OTP is ${otp}. It will expire in 5 minutes.`,
       };
 
+      // Send the email
       await transporter.sendMail(mailOptions);
 
-      res.status(200).json({ message: "OTP sent successfully" });
+      console.log("OTP sent successfully:", { email, otp });
+      res.status(200).send(SendResponse(true, "OTP sent successfully"));
     } catch (error) {
       console.error("Error in sendOtp:", error);
       res
         .status(500)
-        .send(SendResponse(false, "Internal Server Error", error.message));
+        .send(SendResponse(false, "Failed to send OTP", error.message));
     }
   },
 
@@ -180,9 +231,9 @@ const AuthController = {
           .send(SendResponse(false, "Some fields are missing", missingFields));
       }
 
-      console.log("Received input:", { email, otp });
+      console.log("Received email and OTP in signup:", { email, otp });
 
-      // Fetch OTP data for the provided email
+      // Fetch OTP data for the email
       const storedOtpData = otpStore[email];
       if (!storedOtpData) {
         return res
@@ -192,20 +243,20 @@ const AuthController = {
 
       const { otp: storedOtp, expires } = storedOtpData;
 
-      // Check if OTP is expired
+      // Verify OTP expiration
       if (Date.now() > expires) {
         return res.status(400).send(SendResponse(false, "OTP has expired"));
       }
 
-      // Verify OTP
+      // Verify OTP value
       if (parseInt(otp, 10) !== storedOtp) {
         return res.status(400).send(SendResponse(false, "Invalid OTP"));
       }
 
-      // Hash password
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Check if the user already exists
+      // Check if user already exists
       const existingUser = await UserModel.findOne({ email });
       if (existingUser) {
         return res
@@ -242,13 +293,17 @@ const AuthController = {
 
       // Save the new user
       await newUser.save();
+      // Remove OTP after successful signup
+      delete otpStore[email];
+
+      console.log("User created successfully:", newUser);
 
       // Send confirmation email
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.EMAIL,
-          pass: process.env.PASS,
+          user: process.env.EMAIL, // Your email
+          pass: process.env.PASS, // Your email password
         },
       });
 
@@ -259,25 +314,11 @@ const AuthController = {
         text: `Dear ${firstName},\n\nYour account has been successfully created. Welcome to our platform!\n\nThank you for signing up with us.\n\nBest regards,\nYour Team`,
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending confirmation email:", error);
-        } else {
-          console.log("Confirmation email sent:", info.response);
-        }
-      });
-
-      // Remove OTP after successful signup
-      delete otpStore[email];
+      await transporter.sendMail(mailOptions);
 
       return res
         .status(200)
-        .send(
-          SendResponse(
-            true,
-            "User created successfully and confirmation email sent"
-          )
-        );
+        .send(SendResponse(true, "User created successfully"));
     } catch (error) {
       console.error("Signup error:", error);
       return res
