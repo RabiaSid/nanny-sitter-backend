@@ -176,7 +176,7 @@ const AuthController = {
       await transporter.sendMail(mailOptions);
 
       console.log("OTP sent successfully:", { email, otp });
-      res.status(200).send(SendResponse(true, "OTP sent successfully", res));
+      res.status(200).send(SendResponse(true, "OTP sent successfully"));
     } catch (error) {
       console.error("Error in sendOtp:", error);
       res
