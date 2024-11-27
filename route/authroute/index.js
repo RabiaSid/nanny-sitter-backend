@@ -39,11 +39,11 @@ const passport = require("passport");
 
 route.get("/", AuthController.getUsers);
 route.get("/:id", AuthController.getUserById);
-// route.post("/user-signup", AuthController.userSignup);
-// route.post("/nanny-signup", AuthController.nannySignup);
-// route.post("/verify-email-signup", AuthController.verifyOTP);
-route.post("/send-otp", AuthController.sendOtp);
-route.post("/signup", AuthController.signup);
+route.post("/user-signup", AuthController.userSignup);
+route.post("/nanny-signup", AuthController.nannySignup);
+route.post("/verify-email-signup", AuthController.verifyOTP);
+// route.post("/send-otp", AuthController.sendOtp);
+// route.post("/signup", AuthController.signup);
 route.post("/admin-signup", AuthController.adminSignup);
 route.post("/login", AuthController.login);
 route.put("/:id", AuthController.editUsers);
