@@ -38,6 +38,9 @@ const BookingSchema = mongoose.Schema(
       enum: ["pending", "approved", "reject"],
       default: "pending",
     },
+    rejectReason: {
+      type: String,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
