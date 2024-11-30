@@ -217,7 +217,6 @@ const AuthController = {
       // Validate required fields
       const requiredFields = [
         "email",
-        "otp",
         "password",
         "firstName",
         "lastName",
